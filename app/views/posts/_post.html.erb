@@ -1,0 +1,18 @@
+<tr>
+  <td style="padding: 0.75rem; border: 1px solid #ddd;"><%= post.title %></td>
+  <td style="padding: 0.75rem; border: 1px solid #ddd;"><%= post.user&.name || "Unknown" %></td>
+  <td style="padding: 0.75rem; border: 1px solid #ddd;">
+    <% if post.published_at %>
+      <%= time_ago_in_words(post.published_at) %> ago
+    <% else %>
+      Not published
+    <% end %>
+  </td>
+  <td style="padding: 0.75rem; border: 1px solid #ddd; text-align: center;">
+    <%= link_to "Show", post_path(post), style: "color: #007bff; margin-right: 0.5rem; text-decoration: none;" %>
+    <% if can_edit_post?(post) %>
+      <%= link_to "Edit", edit_post_path(post), style: "color: #ffc107; margin-right: 0.5rem; text-decoration: none;" %>
+      <%= button_to "Delete", post_path(post), method: :delete, data: { turbo_confirm: "Are you sure?" }, style: "background: #dc3545; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;" %>
+    <% end %>
+  </td>
+</tr>

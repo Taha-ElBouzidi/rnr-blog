@@ -1,0 +1,32 @@
+<%= form_with model: @post do |form| %>
+  <% if @post.errors.any? %>
+    <div style="color: red; margin-bottom: 1rem;">
+      <h2><%= pluralize(@post.errors.count, "error") %> prohibited this post from being saved:</h2>
+      <ul>
+        <% @post.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :title, style: "display: block; margin-bottom: 0.25rem;" %>
+    <%= form.text_field :title, style: "width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" %>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :body, style: "display: block; margin-bottom: 0.25rem;" %>
+    <%= form.text_area :body, rows: 10, style: "width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" %>
+  </div>
+
+  <div style="margin-bottom: 1rem;">
+    <%= form.label :published_at, style: "display: block; margin-bottom: 0.25rem;" %>
+    <%= form.datetime_field :published_at, style: "padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" %>
+  </div>
+
+  <div>
+    <%= form.submit style: "padding: 0.5rem 1rem; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; margin-right: 0.5rem;" %>
+    <%= link_to "Cancel", posts_path, style: "padding: 0.5rem 1rem; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;" %>
+  </div>
+<% end %>

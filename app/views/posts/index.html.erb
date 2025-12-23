@@ -1,0 +1,25 @@
+<h1>Posts</h1>
+
+<div style="margin-bottom: 1rem;">
+  <%= link_to "New Post", new_post_path, style: "padding: 0.5rem 1rem; background: #28a745; color: white; text-decoration: none; border-radius: 4px; display: inline-block;" %>
+</div>
+
+<table style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr style="background: #f5f5f5;">
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #ddd;">Title</th>
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #ddd;">Author</th>
+      <th style="padding: 0.75rem; text-align: left; border: 1px solid #ddd;">Published At</th>
+      <th style="padding: 0.75rem; text-align: center; border: 1px solid #ddd;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render @posts %>
+  </tbody>
+</table>
+
+<% if @posts.empty? %>
+  <p style="margin-top: 2rem; color: #666;">No posts yet. <%= link_to "Create one", new_post_path, style: "color: #007bff;" %></p>
+<% end %>
+
+    </main>
