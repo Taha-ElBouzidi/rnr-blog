@@ -2,6 +2,7 @@ services:
   - type: web
     name: rnr-blog
     env: ruby
+    plan: free
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     envVars:
@@ -16,3 +17,4 @@ databases:
   - name: rnr-blog-db
     databaseName: rnr_blog
     user: rnr_blog
+    plan: free
