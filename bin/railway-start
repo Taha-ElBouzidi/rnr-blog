@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+echo "=== Running database migrations ==="
+./bin/rails db:prepare
+echo "=== Database ready ==="
+
+echo "=== Starting application ==="
+exec ./bin/thrust ./bin/rails server
