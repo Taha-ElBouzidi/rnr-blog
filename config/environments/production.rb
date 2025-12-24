@@ -5,7 +5,10 @@ Rails.application.configure do
 
   # Explicitly set secret_key_base from environment variable
   # Allow SECRET_KEY_BASE_DUMMY during asset precompilation in Docker
-  config.secret_key_base = ENV["SECRET_KEY_BASE"] || ENV["SECRET_KEY_BASE_DUMMY"]
+  # Fall back to credentials if neither is set
+  config.secret_key_base = ENV["SECRET_KEY_BASE"].presence || 
+                            ENV["SECRET_KEY_BASE_DUMMY"].presence || 
+                            Rails.application.credentials.secret_key_base
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
