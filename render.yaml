@@ -3,8 +3,10 @@ services:
     name: rnr-blog
     env: ruby
     plan: free
+    region: oregon
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -18,3 +20,4 @@ databases:
     databaseName: rnr_blog
     user: rnr_blog
     plan: free
+    region: oregon

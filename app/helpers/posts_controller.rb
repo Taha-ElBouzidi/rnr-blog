@@ -1,11 +1,26 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: [:show, :edit, :update, :destroy]
+  before_action :require_login, only: [:new, :create]
+  before_action :set_post, only: [:edit, :update, :destroy]
   before_action :authorize_post_edit, only: [:edit, :update, :destroy]
   
   def index
-    @posts = Post.all
+    @posts = Post.includes(:user).recent
+    
+    # Only admins can filter by status
+    if current_user&.role == "admin"
+      @posts = @posts.published if params[:status] == 'published'
+      @posts = @posts.drafts if params[:status] == 'drafts'
+    end
+    
+    @posts = @posts.by_author(params[:author_id]) if params[:author_id].present?
+    
+    @posts = @posts.search(params[:q]) if params[:q].present?
   end
   def show
+    # Eager load comments (ordered) and their users to avoid N+1
+    @post = Post.includes(comments: :user).find_by(slug: params[:id]) || Post.includes(comments: :user).find(params[:id])
+    # Sort comments in memory to avoid additional query
+    @comments = @post.comments.sort_by(&:created_at).reverse
   end
   def new
     @post = Post.new
@@ -37,10 +52,8 @@ class PostsController < ApplicationController
   private
 
   def set_post
-    @post = current_user ? current_user.posts.find_by!(slug: params[:id]) : Post.find_by!(slug: params[:id])
-  rescue ActiveRecord::RecordNotFound
-    # Fallback to finding by slug across all users' posts
-    @post = Post.find_by!(slug: params[:id])
+    # Try to find by slug first, then fall back to ID
+    @post = Post.find_by(slug: params[:id]) || Post.find(params[:id])
   end
 
   def authorize_post_edit
@@ -53,6 +66,12 @@ class PostsController < ApplicationController
     current_user && (current_user.id == post.user_id || current_user.role == "admin")
   end
   helper_method :can_edit_post?
+
+  def require_login
+    unless current_user
+      redirect_to posts_path, alert: "You must be logged in to create a post."
+    end
+  end
 
   def post_params
     params.require(:post).permit(:title, :body, :published_at)
