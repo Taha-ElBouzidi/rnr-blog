@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-# Always prepare the database (creates if needed, runs migrations if needed)
+echo "=== Running database migrations ==="
 ./bin/rails db:prepare
+echo "=== Database ready ==="
 
 exec "${@}"
