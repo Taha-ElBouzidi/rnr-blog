@@ -903,29 +903,37 @@ bin/rake db:seed_test_data
 
 #### Screenshots & Demo Videos
 
-**📸 Screenshot Placeholders:**
+**📸 Screenshots:**
 
 1. **Posts Index Page**
    - Location: `/posts`
    - Shows: Grid of posts, filter form, "New Post" button
    - Highlights: Turbo frames, search input, dropdowns
 
+   ![Posts Index Page](docs/images/01_posts_index.png)
+
 2. **Inline Post Creation**
    - Location: `/posts` (after clicking "New Post")
    - Shows: Form loaded inline without page reload
    - Highlights: Turbo frame in action
+
+   ![Inline Post Creation](docs/images/02_inline_post_creation.png)
 
 3. **Post Detail with Comments**
    - Location: `/posts/:slug`
    - Shows: Full post, comment list, new comment form
    - Highlights: Turbo frames for comments
 
+   ![Post Detail with Comments](docs/images/03_post_detail_comments.png)
+
 4. **Admin Filter View**
    - Location: `/posts?status=published`
    - Shows: Admin-only status dropdown, filtered results
    - Highlights: Role-based filtering
 
-**🎬 Demo GIF Placeholders:**
+   ![Admin Filter View](docs/images/04_admin_filter_view.png)
+
+**🎬 Demo GIFs:**
 
 1. **Creating a Post (Inline)**
    - Action: Click "New Post" → Form appears → Fill title/body → Submit
@@ -933,17 +941,22 @@ bin/rake db:seed_test_data
    - Duration: ~10 seconds
    - Highlights: Zero page reload, smooth animation
 
+   ![Creating Post Inline](docs/images/demo_01_create_post_inline.gif)
+
 2. **Deleting a Post**
    - Action: Click "Delete" on any post
    - Result: Post slides up and fades out, disappears from list
    - Duration: ~3 seconds
    - Highlights: Smooth exit animation
 
+   ![Deleting Post](docs/images/demo_02_delete_post.gif)
+
 3. **Form Submit Button Behavior**
    - Action: Fill post form → Click "Save Post"
    - Result: Button disables, text changes to "Saving...", then re-enables
    - Duration: ~5 seconds
    - Highlights: Stimulus controller in action
+   - *Note: Too fast on localhost to capture - skipped*
 
 4. **Auto-Submit Filter**
    - Action: Type in search box → Wait 300ms → Results update
@@ -951,11 +964,15 @@ bin/rake db:seed_test_data
    - Duration: ~8 seconds
    - Highlights: Debounced auto-submit, no manual submit needed
 
+   ![Auto-Submit Filter](docs/images/demo_04_autosubmit_filter.gif)
+
 5. **Clear Filter Button**
    - Action: Search for "test" → Click "Clear" button
    - Result: Search box resets, all posts reappear
    - Duration: ~4 seconds
    - Highlights: Stimulus clear action
+
+   ![Clear Filter Button](docs/images/demo_05_clear_filter.gif)
 
 6. **Creating & Deleting Comments**
    - Action: Type comment → Submit → New comment slides in → Delete comment → Slides out
@@ -963,11 +980,15 @@ bin/rake db:seed_test_data
    - Duration: ~12 seconds
    - Highlights: Full comment lifecycle without page reload
 
+   ![Comments Lifecycle](docs/images/demo_06_comments_lifecycle.gif)
+
 7. **Editing a Post Inline**
    - Action: Click "Edit" → Form loads inline → Submit → Post updates in place
    - Result: Zero navigation, instant update
    - Duration: ~10 seconds
    - Highlights: Turbo frame edit flow
+
+   ![Editing Post Inline](docs/images/demo_07_edit_post_inline.gif)
 
 ---
 
