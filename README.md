@@ -504,13 +504,8 @@ StreamActions.remove_with_animation = function() {
 - ✅ "New Post" loads form inline without page reload
 - ✅ Form submission prepends post to list with slide-in animation
 - ✅ Delete button removes post with slide-out animation
-- ✅ No custom JavaScript (only Turbo + CSS animations)
+- ✅ No custom JavaScript needed - just Turbo + CSS animations
 - ✅ Zero full-page redirects
-
-**Screenshots/Demo:**
-- 📸 **Screenshot 1:** Posts index page with "New Post" button
-- 🎬 **Demo GIF 1:** Creating a new post inline (form appears → submit → post slides in)
-- 🎬 **Demo GIF 2:** Deleting a post (click delete → post slides out and disappears)
 
 ---
 
@@ -631,17 +626,11 @@ export default class extends Controller {
 ```
 
 **Results:**
-- ✅ Submit button disables on click
-- ✅ Button text changes to "Saving..." during submission
-- ✅ Filter form auto-submits on input (300ms debounce)
-- ✅ Clear button resets search and refreshes results
-- ✅ No business logic in Stimulus (only UI concerns)
+- ✅ Submit button disables on click with "Saving..." text
+- ✅ Filter form auto-submits as you type (300ms debounce)
+- ✅ Clear button resets search instantly
+- ✅ No business logic in Stimulus - only UI behavior
 - ✅ Results update without page refresh
-
-**Screenshots/Demo:**
-- 🎬 **Demo GIF 3:** Form submit behavior (click submit → button disables → "Saving..." text)
-- 🎬 **Demo GIF 4:** Filter auto-submit (type in search → 300ms delay → results update inline)
-- 🎬 **Demo GIF 5:** Clear button (click clear → search resets → shows all posts)
 
 ---
 
@@ -901,94 +890,43 @@ bin/rake db:seed_test_data
 
 ---
 
-#### Screenshots & Demo Videos
+#### Screenshots & Demos
 
-**📸 Screenshots:**
+Here's the app in action showing all the Turbo and Stimulus features:
 
-1. **Posts Index Page**
-   - Location: `/posts`
-   - Shows: Grid of posts, filter form, "New Post" button
-   - Highlights: Turbo frames, search input, dropdowns
+**Screenshots:**
 
-   ![Posts Index Page](docs/images/01_posts_index.png)
+![Posts Index](docs/images/01_posts_index.png)
+*Posts index page with filters and inline actions*
 
-2. **Inline Post Creation**
-   - Location: `/posts` (after clicking "New Post")
-   - Shows: Form loaded inline without page reload
-   - Highlights: Turbo frame in action
+![Inline Form](docs/images/02_inline_post_creation.png)
+*Creating a new post without leaving the page*
 
-   ![Inline Post Creation](docs/images/02_inline_post_creation.png)
+![Post with Comments](docs/images/03_post_detail_comments.png)
+*Post detail page with inline comments*
 
-3. **Post Detail with Comments**
-   - Location: `/posts/:slug`
-   - Shows: Full post, comment list, new comment form
-   - Highlights: Turbo frames for comments
+![Admin Filters](docs/images/04_admin_filter_view.png)
+*Admin users get an extra status filter*
 
-   ![Post Detail with Comments](docs/images/03_post_detail_comments.png)
+**Demo Videos:**
 
-4. **Admin Filter View**
-   - Location: `/posts?status=published`
-   - Shows: Admin-only status dropdown, filtered results
-   - Highlights: Role-based filtering
+![Create Post](docs/images/demo_01_create_post_inline.gif)
+*Click "New Post", fill the form, and watch it appear at the top - no page reload*
 
-   ![Admin Filter View](docs/images/04_admin_filter_view.png)
+![Delete Post](docs/images/demo_02_delete_post.gif)
+*Posts fade out smoothly when deleted*
 
-**🎬 Demo GIFs:**
+![Auto Filter](docs/images/demo_04_autosubmit_filter.gif)
+*Search filters posts automatically as you type (with 300ms debounce)*
 
-1. **Creating a Post (Inline)**
-   - Action: Click "New Post" → Form appears → Fill title/body → Submit
-   - Result: Form closes, new post slides in at top of list
-   - Duration: ~10 seconds
-   - Highlights: Zero page reload, smooth animation
+![Clear Filter](docs/images/demo_05_clear_filter.gif)
+*One click to clear search and see all posts again*
 
-   ![Creating Post Inline](docs/images/demo_01_create_post_inline.gif)
+![Comments](docs/images/demo_06_comments_lifecycle.gif)
+*Add and delete comments inline with smooth animations*
 
-2. **Deleting a Post**
-   - Action: Click "Delete" on any post
-   - Result: Post slides up and fades out, disappears from list
-   - Duration: ~3 seconds
-   - Highlights: Smooth exit animation
-
-   ![Deleting Post](docs/images/demo_02_delete_post.gif)
-
-3. **Form Submit Button Behavior**
-   - Action: Fill post form → Click "Save Post"
-   - Result: Button disables, text changes to "Saving...", then re-enables
-   - Duration: ~5 seconds
-   - Highlights: Stimulus controller in action
-   - *Note: Too fast on localhost to capture - skipped*
-
-4. **Auto-Submit Filter**
-   - Action: Type in search box → Wait 300ms → Results update
-   - Result: Posts filter inline as you type
-   - Duration: ~8 seconds
-   - Highlights: Debounced auto-submit, no manual submit needed
-
-   ![Auto-Submit Filter](docs/images/demo_04_autosubmit_filter.gif)
-
-5. **Clear Filter Button**
-   - Action: Search for "test" → Click "Clear" button
-   - Result: Search box resets, all posts reappear
-   - Duration: ~4 seconds
-   - Highlights: Stimulus clear action
-
-   ![Clear Filter Button](docs/images/demo_05_clear_filter.gif)
-
-6. **Creating & Deleting Comments**
-   - Action: Type comment → Submit → New comment slides in → Delete comment → Slides out
-   - Result: All interactions happen inline
-   - Duration: ~12 seconds
-   - Highlights: Full comment lifecycle without page reload
-
-   ![Comments Lifecycle](docs/images/demo_06_comments_lifecycle.gif)
-
-7. **Editing a Post Inline**
-   - Action: Click "Edit" → Form loads inline → Submit → Post updates in place
-   - Result: Zero navigation, instant update
-   - Duration: ~10 seconds
-   - Highlights: Turbo frame edit flow
-
-   ![Editing Post Inline](docs/images/demo_07_edit_post_inline.gif)
+![Edit Post](docs/images/demo_07_edit_post_inline.gif)
+*Edit posts right in the list - form appears inline and updates instantly*
 
 ---
 
