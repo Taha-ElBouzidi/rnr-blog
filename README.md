@@ -841,43 +841,6 @@ Here's the app in action showing all the Turbo and Stimulus features:
 
 ---
 
-#### Learning Outcomes
-
-**Turbo Frames:**
-- Understanding frame-based page composition
-- Lazy-loaded frames vs eager frames
-- Breaking out of frames with `_top`
-- Turbo Stream responses for dynamic updates
-
-**Turbo Streams:**
-- Seven actions: append, prepend, replace, update, remove, before, after
-- Custom stream actions (e.g., `remove_with_animation`)
-- Combining multiple streams in one response
-- Stream rendering from controllers
-
-**Stimulus:**
-- Separation of concerns (UI only, no business logic)
-- Target pattern for DOM references
-- Action pattern for event handling
-- Lifecycle callbacks (connect, disconnect)
-- Debouncing user input
-
-**Performance:**
-- Reduced server load (partial rendering vs full pages)
-- Faster perceived performance (instant UI updates)
-- GPU-accelerated CSS animations
-- Efficient Turbo Drive caching
-
-**Best Practices:**
-- DRY with concerns (Authorizable)
-- Shared partials (empty_state)
-- Consistent naming conventions (Turbo frame IDs)
-- Error handling for race conditions (deleted records)
-
----
-
-**Total Lines Changed:** ~450+ (design overhaul + features + optimizations)
-
 ## Contributing
 
 1. Fork the repository
