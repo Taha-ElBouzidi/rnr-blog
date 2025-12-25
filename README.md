@@ -636,87 +636,7 @@ export default class extends Controller {
 
 #### Additional Improvements
 
-**1. Code Optimization with Concerns**
-*Location: `app/controllers/concerns/authorizable.rb`*
-
-Created `Authorizable` concern to DRY up authorization logic:
-
-```ruby
-module Authorizable
-  extend ActiveSupport::Concern
-  
-  included do
-    helper_method :can_edit_post?, :can_delete_comment?
-  end
-  
-  private
-  
-  def require_login
-    unless current_user
-      redirect_to login_path, alert: "You must be logged in to do that."
-    end
-  end
-  
-  def can_edit_post?(post)
-    current_user && (current_user == post.user || current_user.role == 'admin')
-  end
-  
-  def can_delete_comment?(comment)
-    current_user && (current_user == comment.user || current_user.role == 'admin')
-  end
-end
-```
-
-**Before (ApplicationController + PostsController + CommentsController):**
-```ruby
-# ~36 lines of duplicate authorization code across 3 files
-```
-
-**After:**
-```ruby
-# app/controllers/application_controller.rb
-class ApplicationController < ActionController::Base
-  include Authorizable
-  # 12 lines removed
-end
-```
-
-**Code Reduction:** ~24 lines eliminated
-
-**2. Optimized Post Search Scope**
-*Location: `app/models/post.rb`*
-
-Improved search performance with better query structure:
-
-```ruby
-scope :search, ->(query) {
-  return none if query.blank?
-  sanitized = sanitize_sql_like(query)
-  where("LOWER(title) LIKE ? OR LOWER(body) LIKE ?", 
-        "%#{sanitized.downcase}%", 
-        "%#{sanitized.downcase}%")
-}
-```
-
-**3. Default Comment Ordering**
-*Location: `app/models/post.rb`*
-
-```ruby
-has_many :comments, -> { order(created_at: :desc) }, dependent: :destroy
-```
-
-**4. Shared Empty State Partial**
-*Location: `app/views/posts/_empty_state.html.erb`*
-
-```erb
-<div class="text-center py-8 bg-gray-100 rounded-md">
-  <p class="text-gray-600 text-sm m-0">
-    No posts found. <%= link_to "Create one", new_post_path, class: "text-blue-600 font-semibold" %>
-  </p>
-</div>
-```
-
-**5. Tailwind CSS Integration**
+**Tailwind CSS Integration**
 *Location: `app/assets/stylesheets/application.tailwind.css`*
 
 Migrated from inline styles to Tailwind CSS utility classes with custom components:
@@ -769,15 +689,6 @@ Migrated from inline styles to Tailwind CSS utility classes with custom componen
 <%= turbo_stream.action :remove_with_animation, dom_id(@comment) %>
 ```
 
-**7. Bug Fixes**
-
-- Fixed phantom comment appearing after creation (changed `@post.comments.build` to `Comment.new`)
-- Added `comment.persisted?` check to prevent unsaved comments from rendering
-- Added error handling for deleted comments (`RecordNotFound`)
-- Fixed Clear button in filter (changed `formTarget` to `this.element`)
-- Disabled Turbo for login/logout (full page redirects)
-- Disabled Turbo for delete from show page (redirects to home)
-- Removed validation confirmations from delete buttons
 
 **8. Test Data Generation**
 
