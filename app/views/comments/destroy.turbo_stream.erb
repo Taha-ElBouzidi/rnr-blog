@@ -1,0 +1,5 @@
+<%= turbo_stream.update "flash_messages" do %>
+  <%= render "shared/flash" %>
+<% end %>
+
+<%= turbo_stream.action :remove_with_animation, dom_id(@comment) %>

@@ -1,13 +1,16 @@
 class Post < ApplicationRecord
   belongs_to :user
-  has_many :comments, dependent: :destroy
+  has_many :comments, -> { order(created_at: :desc) }, dependent: :destroy
 
   # Scopes
   scope :published, -> { where.not(published_at: nil) }
   scope :drafts, -> { where(published_at: nil) }
   scope :recent, -> { order(created_at: :desc) }
   scope :by_author, ->(user_id) { where(user_id: user_id) }
-  scope :search, ->(query) { where("title LIKE ? OR body LIKE ?", "%#{sanitize_sql_like(query)}%", "%#{sanitize_sql_like(query)}%") }
+  scope :search, ->(query) { 
+    sanitized = sanitize_sql_like(query)
+    where("title LIKE :q OR body LIKE :q", q: "%#{sanitized}%") 
+  }
 
   validates :title, presence: true, length: { minimum: 5, maximum: 120 }
   validates :body, presence: true, length: { minimum: 3, maximum: 500 }

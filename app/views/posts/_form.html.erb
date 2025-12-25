@@ -1,38 +1,35 @@
-<%= form_with model: @post do |form| %>
-  <% if @post.errors.any? %>
-    <div style="background: linear-gradient(135deg, #fee 0%, #fdd 100%); border-left: 5px solid #e53e3e; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 15px rgba(229,62,62,0.15);">
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-        <span style="font-size: 2rem;">⚠️</span>
-        <h3 style="margin: 0; color: #c53030; font-weight: 600;"><%= pluralize(@post.errors.count, "error") %> prevented this post from being saved:</h3>
-      </div>
-      <ul style="margin: 0; padding-left: 3.5rem; color: #9b2c2c;">
-        <% @post.errors.each do |error| %>
-          <li style="margin-bottom: 0.5rem;"><%= error.full_message %></li>
+<%= form_with model: post, data: { turbo_frame: post.persisted? ? dom_id(post) : "new_post_frame", controller: "form-submit", action: "turbo:submit-start->form-submit#disableSubmit turbo:submit-end->form-submit#enable" } do |form| %>
+  <% if post.errors.any? %>
+    <div class="error-container">
+      <h3 class="error-title"><%= pluralize(post.errors.count, "error") %> prevented this post from being saved:</h3>
+      <ul class="error-list">
+        <% post.errors.each do |error| %>
+          <li><%= error.full_message %></li>
         <% end %>
       </ul>
     </div>
   <% end %>
 
-  <div style="margin-bottom: 2rem;">
-    <%= form.label :title, "📌 Post Title", style: "display: block; margin-bottom: 0.75rem; font-weight: 600; color: #2d3748; font-size: 1rem;" %>
-    <%= form.text_field :title, placeholder: "Enter an engaging title...", style: "width: 100%; padding: 1rem 1.25rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.1rem; transition: all 0.3s ease; font-family: inherit;", onfocus: "this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'", onblur: "this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'" %>
-    <small style="color: #718096; font-size: 0.85rem; display: block; margin-top: 0.5rem;">5-120 characters</small>
+  <div class="mb-4">
+    <%= form.label :title, "Title", class: "form-label" %>
+    <%= form.text_field :title, placeholder: "Enter title...", class: "form-input" %>
+    <small class="form-hint">5-120 characters</small>
   </div>
 
-  <div style="margin-bottom: 2rem;">
-    <%= form.label :body, "📝 Post Content", style: "display: block; margin-bottom: 0.75rem; font-weight: 600; color: #2d3748; font-size: 1rem;" %>
-    <%= form.text_area :body, rows: 12, placeholder: "Write your post content here...", style: "width: 100%; padding: 1rem 1.25rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; line-height: 1.6; transition: all 0.3s ease; font-family: inherit; resize: vertical;", onfocus: "this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'", onblur: "this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'" %>
-    <small style="color: #718096; font-size: 0.85rem; display: block; margin-top: 0.5rem;">3-500 characters</small>
+  <div class="mb-4">
+    <%= form.label :body, "Content", class: "form-label" %>
+    <%= form.text_area :body, rows: 10, placeholder: "Write your post...", class: "form-textarea" %>
+    <small class="form-hint">3-500 characters</small>
   </div>
 
-  <div style="margin-bottom: 2.5rem;">
-    <%= form.label :published_at, "🕒 Publish Date & Time", style: "display: block; margin-bottom: 0.75rem; font-weight: 600; color: #2d3748; font-size: 1rem;" %>
-    <%= form.datetime_field :published_at, style: "padding: 1rem 1.25rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; transition: all 0.3s ease;", onfocus: "this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'", onblur: "this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'" %>
-    <small style="color: #718096; font-size: 0.85rem; display: block; margin-top: 0.5rem;">Leave empty for draft or set future date for scheduled publishing</small>
+  <div class="mb-4">
+    <%= form.label :published_at, "Publish Date", class: "form-label" %>
+    <%= form.datetime_field :published_at, class: "form-input" %>
+    <small class="form-hint">Leave empty for draft</small>
   </div>
 
-  <div style="display: flex; gap: 1rem; padding-top: 1rem; border-top: 2px solid #e2e8f0;">
-    <%= form.submit @post.new_record? ? "✨ Create Post" : "💾 Update Post", class: "btn btn-success", style: "padding: 1rem 2.5rem; font-size: 1.05rem; font-weight: 600;" %>
-    <%= link_to "← Back", posts_path, class: "btn btn-secondary", style: "padding: 1rem 2rem; font-size: 1.05rem;" %>
+  <div class="flex gap-2">
+    <%= form.submit post.new_record? ? "Create Post" : "Update Post", class: "btn btn-success", data: { form_submit_target: "submit" } %>
+    <%= link_to "Back", posts_path, class: "btn btn-secondary", data: { turbo_frame: "_top" } %>
   </div>
 <% end %>

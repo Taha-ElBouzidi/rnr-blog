@@ -1,0 +1,9 @@
+<%= turbo_stream.replace "posts" do %>
+  <%= turbo_frame_tag "posts" do %>
+    <% if @posts.any? %>
+      <%= render @posts %>
+    <% else %>
+      <%= render "empty_state" %>
+    <% end %>
+  <% end %>
+<% end %>

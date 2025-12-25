@@ -1,0 +1,21 @@
+<%= turbo_stream.update "flash_messages" do %>
+  <%= render "shared/flash" %>
+<% end %>
+
+<%= turbo_stream.prepend "comments" do %>
+  <div class="animate-slide-in">
+    <%= turbo_frame_tag dom_id(@comment) do %>
+      <%= render "comments/comment", comment: @comment, post: @post %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= turbo_stream.update "new_comment_form" do %>
+  <div class="mb-4 p-3 bg-gray-100 rounded-md">
+    <%= form_with model: [@post, Comment.new], data: { turbo_frame: "new_comment_form", controller: "form-submit", action: "turbo:submit-start->form-submit#disableSubmit turbo:submit-end->form-submit#enable" } do |f| %>
+      <%= f.text_area :body, rows: 3, placeholder: "Write a comment...", 
+          class: "form-textarea mb-2" %>
+      <%= f.submit "Post Comment", class: "btn btn-success", data: { form_submit_target: "submit" } %>
+    <% end %>
+  </div>
+<% end %>

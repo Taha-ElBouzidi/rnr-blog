@@ -1,28 +1,27 @@
-<h1>Login</h1>
+<div class="max-w-md mx-auto px-4">
+  <div class="card">
+    <h1 class="text-2xl font-bold mb-4">Login</h1>
+    
+    <%= form_with url: login_path, method: :post, data: { turbo: false } do |f| %>
+      <div class="mb-4">
+        <label for="user_id" class="form-label">Select User:</label>
+        <select name="user_id" id="user_id" class="form-input">
+          <option value="">-- Choose a user --</option>
+          <% @users.each do |user| %>
+            <option value="<%= user.id %>"><%= user.name %> (<%= user.email %>)</option>
+          <% end %>
+        </select>
+      </div>
 
-<div style="max-width: 500px; margin: 2rem auto; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
-  <%= form_with url: login_path, method: :post, style: "display: flex; flex-direction: column; gap: 1.5rem;" do |f| %>
-    <div>
-      <label for="user_id" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Select User:</label>
-      <select name="user_id" id="user_id" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-        <option value="">-- Choose a user --</option>
-        <% @users.each do |user| %>
-          <option value="<%= user.id %>"><%= user.name %> (<%= user.email %>)</option>
-        <% end %>
-      </select>
-    </div>
+      <% if @users.empty? %>
+        <p class="text-gray-600 mb-2 text-sm">No users available. Create users in the Rails console first:</p>
+        <pre class="bg-gray-100 p-3 rounded-md overflow-x-auto text-xs mb-4">User.create(name: "John Doe", email: "john@example.com")</pre>
+      <% end %>
 
-    <% if @users.empty? %>
-      <p style="color: #666; font-style: italic;">No users available. Create users in the Rails console first:</p>
-      <pre style="background: #333; color: #fff; padding: 1rem; border-radius: 4px; overflow-x: auto;">User.create(name: "John Doe", email: "john@example.com", role: "member")</pre>
+      <div class="flex gap-2">
+        <%= f.submit "Login", class: "btn btn-primary" %>
+        <%= link_to "Back to Posts", root_path, class: "btn btn-secondary" %>
+      </div>
     <% end %>
-
-    <div>
-      <%= f.submit "Login", style: "padding: 0.75rem 2rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold;" %>
-    </div>
-  <% end %>
-
-  <div style="margin-top: 1.5rem;">
-    <%= link_to "Back to Posts", root_path, style: "color: #007bff; text-decoration: none;" %>
   </div>
 </div>

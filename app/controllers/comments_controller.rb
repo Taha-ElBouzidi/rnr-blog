@@ -1,5 +1,7 @@
 class CommentsController < ApplicationController
   before_action :require_login, only: [:create]
+  before_action :set_comment, only: [:destroy]
+  before_action :authorize_comment_delete, only: [:destroy]
   
   def create
     # Find post by slug or ID
@@ -7,30 +9,40 @@ class CommentsController < ApplicationController
     @comment = @post.comments.build(comment_params)
     @comment.user = current_user
 
-    if @comment.save
-      redirect_to @post, notice: "Comment added successfully."
-    else
-      redirect_to @post, alert: "Failed to add comment: #{@comment.errors.full_messages.join(', ')}"
+    respond_to do |format|
+      if @comment.save
+        format.html { redirect_to @post, notice: "Comment added successfully." }
+        format.turbo_stream { flash.now[:notice] = "Comment added successfully." }
+      else
+        format.html { redirect_to @post, alert: "Failed to add comment: #{@comment.errors.full_messages.join(', ')}" }
+        format.turbo_stream { flash.now[:alert] = "Failed to add comment: #{@comment.errors.full_messages.join(', ')}" }
+      end
     end
   end
 
   def destroy
-    @comment = Comment.find(params[:id])
-    @post = @comment.post
-    
-    if current_user && (current_user.id == @comment.user_id || current_user.role == "admin")
-      @comment.destroy
-      redirect_to @post, notice: "Comment deleted successfully."
-    else
-      redirect_to @post, alert: "You are not authorized to delete this comment."
+    @comment.destroy
+    respond_to do |format|
+      format.html { redirect_to @post, notice: "Comment deleted successfully." }
+      format.turbo_stream { flash.now[:notice] = "Comment deleted successfully." }
     end
   end
 
   private
   
-  def require_login
-    unless current_user
-      redirect_to login_path, alert: "You must be logged in to comment."
+  def set_comment
+    @comment = Comment.find(params[:id])
+    @post = @comment.post
+  rescue ActiveRecord::RecordNotFound
+    respond_to do |format|
+      format.html { redirect_to posts_path, alert: "Comment not found." }
+      format.turbo_stream { head :no_content }
+    end
+  end
+
+  def authorize_comment_delete
+    unless can_delete_comment?(@comment)
+      redirect_to @post, alert: "You are not authorized to delete this comment."
     end
   end
 

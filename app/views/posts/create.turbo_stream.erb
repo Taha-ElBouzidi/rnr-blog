@@ -1,0 +1,13 @@
+<%= turbo_stream.update "flash_messages" do %>
+  <%= render "shared/flash" %>
+<% end %>
+
+<%= turbo_stream.prepend "posts" do %>
+  <div class="animate-slide-in">
+    <%= render @post %>
+  </div>
+<% end %>
+
+<%= turbo_stream.update "new_post_frame" do %>
+  <!-- Close the form after successful creation -->
+<% end %>

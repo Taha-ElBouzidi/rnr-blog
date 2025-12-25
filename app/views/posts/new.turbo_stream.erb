@@ -1,0 +1,8 @@
+<%= turbo_stream.update "new_post_frame" do %>
+  <div class="container">
+    <div class="card">
+      <h1 class="text-2xl font-bold mb-4">Create New Post</h1>
+      <%= render "form", post: @post %>
+    </div>
+  </div>
+<% end %>

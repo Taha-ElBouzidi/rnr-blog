@@ -1,0 +1,29 @@
+<% if comment.persisted? %>
+<div class="mb-3 p-3 bg-gray-50 rounded-md">
+  <div class="flex items-start justify-between mb-2">
+    <div class="flex items-center gap-2">
+      <%= avatar_initials(comment.user, size: 'sm') %>
+      <div>
+        <div class="font-semibold text-sm"><%= comment.user&.name || "Anonymous" %></div>
+        <div class="text-gray-600 text-xs">
+          <% if comment.created_at %>
+            <%= time_ago_in_words(comment.created_at) %> ago
+          <% else %>
+            Just now
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <% if current_user && (current_user == comment.user || current_user.role == 'admin') %>
+      <%= button_to "Delete", post_comment_path(post, comment), 
+          method: :delete, 
+          class: "btn-sm btn-danger" %>
+    <% end %>
+  </div>
+  
+  <div class="text-sm text-gray-800 leading-normal">
+    <%= simple_format(comment.body) %>
+  </div>
+</div>
+<% end %>

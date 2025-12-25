@@ -1,57 +1,38 @@
 <div class="container">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
-    <h1 style="margin: 0; font-size: 2.5rem; font-weight: 700; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">📝 All Posts</h1>
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">All Posts</h1>
     <% if current_user %>
-      <%= link_to "➕ Create New Post", new_post_path, class: "btn btn-success", style: "font-size: 1rem; padding: 0.85rem 1.75rem;" %>
+      <%= link_to "Create Post", new_post_path, data: { turbo_frame: "new_post_frame" }, class: "btn btn-success" %>
     <% end %>
   </div>
 
-  <div class="card" style="margin-bottom: 2.5rem; background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);">
-    <%= form_with url: posts_path, method: :get, local: true, style: "display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1.25rem; align-items: end;" do |f| %>
-      <div>
-        <%= f.label :q, "🔍 Search", style: "display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; font-size: 0.9rem;" %>
-        <%= f.text_field :q, value: params[:q], placeholder: "Search posts...", style: "width: 100%; padding: 0.85rem 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s ease;" + (params[:q].present? ? " background: #f7fafc; border-color: #667eea;" : ""), onfocus: "this.style.borderColor='#667eea'; this.style.boxShadow='0 0 0 3px rgba(102,126,234,0.1)'", onblur: "this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'" %>
-      </div>
+  <%= turbo_frame_tag "new_post_frame" %>
+
+  <div class="card">
+    <%= form_with url: posts_path, method: :get, data: { turbo_frame: "posts", turbo_action: "advance", controller: "autosubmit" }, class: "flex gap-2 flex-wrap" do |f| %>
+      <%= f.text_field :q, value: params[:q], placeholder: "Search posts...", class: "form-input flex-1 min-w-[200px]", data: { action: "input->autosubmit#submit", autosubmit_target: "search" } %>
       
       <% if current_user&.role == "admin" %>
-        <div>
-          <%= f.label :status, "📊 Status", style: "display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; font-size: 0.9rem;" %>
-          <%= f.select :status, 
-              options_for_select([['All', ''], ['✅ Published', 'published'], ['📝 Drafts', 'drafts']], params[:status]),
-              {},
-              style: "width: 100%; padding: 0.85rem 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; background: white; cursor: pointer;" %>
-        </div>
+        <%= f.select :status, 
+            options_for_select([['All', ''], ['Published', 'published'], ['Drafts', 'drafts']], params[:status]),
+            {},
+            class: "form-select", data: { action: "change->autosubmit#submit" } %>
       <% end %>
       
-      <div>
-        <%= f.label :author_id, "👤 Author", style: "display: block; margin-bottom: 0.5rem; font-weight: 600; color: #4a5568; font-size: 0.9rem;" %>
-        <%= f.select :author_id,
-            options_for_select([['All Authors', '']] + User.all.map { |u| [u.name || u.email, u.id] }, params[:author_id]),
-            {},
-            style: "width: 100%; padding: 0.85rem 1rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; background: white; cursor: pointer;" %>
-      </div>
+      <%= f.select :author_id,
+          options_for_select([['All Authors', '']] + @authors.map { |u| [u.name || u.email, u.id] }, params[:author_id]),
+          {},
+          class: "form-select", data: { action: "change->autosubmit#submit" } %>
       
-      <div style="display: flex; gap: 0.75rem;">
-        <%= f.submit "Filter", class: "btn btn-primary", style: "padding: 0.85rem 1.5rem; white-space: nowrap;" %>
-        <%= link_to "↺ Clear", posts_path, class: "btn btn-secondary", style: "padding: 0.85rem 1.25rem;" %>
-      </div>
+      <button type="button" data-action="click->autosubmit#clear" class="btn btn-secondary">Clear</button>
     <% end %>
   </div>
 
-  <% if @posts.any? %>
-    <div style="display: grid; gap: 1.5rem;">
+  <%= turbo_frame_tag "posts" do %>
+    <% if @posts.any? %>
       <%= render @posts %>
-    </div>
-  <% else %>
-    <div class="card" style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);">
-      <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
-      <h2 style="margin: 0 0 1rem 0; color: #4a5568; font-weight: 600;">No posts found</h2>
-      <p style="color: #718096; margin-bottom: 2rem; font-size: 1.1rem;">Be the first to create one!</p>
-      <% if current_user %>
-        <%= link_to "✨ Create Your First Post", new_post_path, class: "btn btn-success", style: "font-size: 1.1rem; padding: 1rem 2rem;" %>
-      <% end %>
-    </div>
+    <% else %>
+      <%= render "empty_state" %>
+    <% end %>
   <% end %>
 </div>
-
-    </main>
