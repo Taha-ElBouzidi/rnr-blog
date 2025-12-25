@@ -5,7 +5,7 @@ class Post < ApplicationRecord
   # Scopes
   scope :published, -> { where.not(published_at: nil) }
   scope :drafts, -> { where(published_at: nil) }
-  scope :recent, -> { order(created_at: :desc) }
+  scope :recent, -> { order(published_at: :desc, created_at: :desc) }
   scope :by_author, ->(user_id) { where(user_id: user_id) }
   scope :search, ->(query) { 
     sanitized = sanitize_sql_like(query)
