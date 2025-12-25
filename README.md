@@ -665,7 +665,7 @@ Migrated from inline styles to Tailwind CSS utility classes with custom componen
 
 **6. Enhanced Comments System**
 
-**Inline Comment Creation:**
+**1. Inline Comment Creation:**
 *Location: `app/views/comments/create.turbo_stream.erb`*
 
 ```erb
@@ -682,7 +682,7 @@ Migrated from inline styles to Tailwind CSS utility classes with custom componen
 <% end %>
 ```
 
-**Comment Deletion with Animation:**
+**2. Comment Deletion with Animation:**
 *Location: `app/views/comments/destroy.turbo_stream.erb`*
 
 ```erb
@@ -690,7 +690,7 @@ Migrated from inline styles to Tailwind CSS utility classes with custom componen
 ```
 
 
-**8. Test Data Generation**
+**3. Test Data Generation**
 
 Created rake task to generate test data:
 *Location: `lib/tasks/seed_test_data.rake`*
