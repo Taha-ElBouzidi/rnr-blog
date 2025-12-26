@@ -1,0 +1,64 @@
+module Comments
+  class CreateService < ApplicationService
+    SPAM_KEYWORDS = %w[
+      casino lottery winner bitcoin crypto
+      click-here buy-now limited-time act-now
+    ].freeze
+
+    def initialize(post:, user:, params:)
+      @post = post
+      @user = user
+      @params = params
+    end
+
+    def call
+      comment = @post.comments.build(@params)
+      comment.user = @user
+
+      # Check for empty/spammy content
+      if comment.body.blank?
+        return Result.new(
+          success: false,
+          post: comment,
+          error: "Comment body can't be blank",
+          error_code: :invalid
+        )
+      end
+
+      if spam_detected?(comment.body)
+        return Result.new(
+          success: false,
+          post: comment,
+          error: "Comment appears to be spam and was blocked",
+          error_code: :spam_blocked
+        )
+      end
+
+      # Create comment and update counter cache in transaction
+      ActiveRecord::Base.transaction do
+        unless comment.save
+          return Result.new(
+            success: false,
+            post: comment,
+            error: comment.errors.full_messages.join(', '),
+            error_code: :invalid
+          )
+        end
+
+        # Counter cache is automatically updated by Rails, but we ensure it's in the same transaction
+        @post.reload
+      end
+
+      Result.new(success: true, post: comment)
+    end
+
+    private
+
+    def spam_detected?(body)
+      return false if body.blank?
+      
+      normalized_body = body.downcase
+      SPAM_KEYWORDS.any? { |keyword| normalized_body.include?(keyword) }
+    end
+  end
+end

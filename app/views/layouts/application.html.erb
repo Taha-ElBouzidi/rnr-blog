@@ -28,11 +28,13 @@
           <% if current_user %>
             <div class="flex items-center gap-3">
               <%= link_to "Home", posts_path, class: "btn btn-secondary" %>
+              <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
               <span class="text-gray-900 text-sm font-semibold"><%= current_user.name %></span>
               <%= button_to "Logout", logout_path, method: :delete, class: "btn btn-danger", data: { turbo: false } %>
             </div>
           <% else %>
             <div class="flex items-center gap-3">
+              <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
               <%= link_to "Login", login_path, class: "btn btn-primary" %>
             </div>
           <% end %>

@@ -1,0 +1,7 @@
+<%= turbo_stream_from "post_#{post.id}_status" %>
+<div id="post_<%= post.id %>_status">
+  <%= status_badge(post.published_at) %>
+  <span class="post-meta ml-2">
+    <%= time_ago_in_words(post.published_at || post.created_at) %> ago
+  </span>
+</div>

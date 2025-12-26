@@ -1,7 +1,7 @@
 class PostsController < ApplicationController
   before_action :require_login, only: [:new, :create]
-  before_action :set_post, only: [:edit, :update, :destroy]
-  before_action :authorize_post_edit, only: [:edit, :update, :destroy]
+  before_action :set_post, only: [:edit, :update, :destroy, :publish, :unpublish]
+  before_action :authorize_post_edit, only: [:edit, :update, :destroy, :publish, :unpublish]
   
   def index
     @posts = Post.includes(:user).recent
@@ -31,11 +31,16 @@ class PostsController < ApplicationController
     @post = Post.new
   end
   def create
-    @post = Post.new(post_params)
-    @post.user = current_user
+    publish_now = params[:post][:publish_now] == "1" || params[:commit] == "Publish"
+    result = Posts::CreateService.call(
+      user: current_user, 
+      params: post_params,
+      publish_now: publish_now
+    )
+    @post = result.post
 
     respond_to do |format|
-      if @post.save
+      if result.success?
         format.html { redirect_to posts_path, notice: "Post was successfully created." }
         format.turbo_stream { flash.now[:notice] = "Post was successfully created." }
       else
@@ -65,7 +70,44 @@ class PostsController < ApplicationController
     end
   end
 
+  def publish
+    result = Posts::PublishService.call(post: @post, publisher: current_user)
+
+    respond_to do |format|
+      if result.success?
+        format.html { redirect_to posts_path, notice: "📢 Post was successfully published!" }
+        format.turbo_stream { flash.now[:notice] = "📢 Post was successfully published!" }
+      else
+        alert_message = result.error_code == :already_published ? result.error : "Failed to publish post"
+        format.html { redirect_to posts_path, alert: alert_message }
+        format.turbo_stream { flash.now[:alert] = alert_message }
+      end
+    end
+  end
+
+  def unpublish
+    if @post.published?
+      @post.update!(published_at: nil, published_by_id: nil)
+      broadcast_status_update(@post)
+      respond_to do |format|
+        format.html { redirect_to posts_path, notice: "📝 Post was unpublished and saved as draft." }
+        format.turbo_stream { flash.now[:notice] = "📝 Post was unpublished and saved as draft." }
+      end
+    else
+      redirect_to posts_path, alert: "Post is already a draft."
+    end
+  end
+
   private
+
+  def broadcast_status_update(post)
+    post.broadcast_replace_to(
+      "post_#{post.id}_status",
+      target: "post_#{post.id}_status",
+      partial: "posts/status_badge",
+      locals: { post: post }
+    )
+  end
 
   def set_post
     # Try to find by slug first, then fall back to ID

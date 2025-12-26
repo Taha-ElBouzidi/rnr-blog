@@ -1,0 +1,278 @@
+<div class="container">
+  <div class="card">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">📚 RNR Blog - Feature Menu</h1>
+    <p class="text-gray-600 mb-6">Welcome to RNR Blog! This page explains all the features and capabilities of this application.</p>
+  </div>
+
+  <!-- User Features -->
+  <div class="card">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>👤</span> User Management
+    </h2>
+    <div class="space-y-4">
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold text-lg mb-2">🔑 Test Login System</h3>
+        <p class="text-gray-700 mb-2">Quick authentication for development and testing purposes.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Select any user from dropdown to log in instantly</li>
+          <li>No password required (development mode)</li>
+          <li>Switch between users easily</li>
+        </ul>
+        <div class="mt-2">
+          <%= link_to "Go to Login →", login_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+        </div>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold text-lg mb-2">👥 User Roles</h3>
+        <p class="text-gray-700 mb-2">Two roles with different permissions:</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li><strong>Member</strong> - Can create posts, comment, edit/delete own content</li>
+          <li><strong>Admin</strong> - Can edit/delete ANY post or comment, access admin filters</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts Features -->
+  <div class="card">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>📝</span> Posts Management
+    </h2>
+    <div class="space-y-4">
+      <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+        <h3 class="font-semibold text-lg mb-2">✍️ Create & Edit Posts</h3>
+        <p class="text-gray-700 mb-2">Full CRUD operations for blog posts.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Title: 5-120 characters</li>
+          <li>Body: 3-500 characters</li>
+          <li>Auto-generated unique slug from title</li>
+          <li>Instant inline editing with Turbo Frames</li>
+        </ul>
+        <div class="mt-2">
+          <%= link_to "View Posts →", posts_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+        </div>
+      </div>
+
+      <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+        <h3 class="font-semibold text-lg mb-2">📢 Publishing System</h3>
+        <p class="text-gray-700 mb-2">Advanced publish/unpublish workflow with tracking.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Create posts as drafts or publish immediately</li>
+          <li>Publish/unpublish with single click</li>
+          <li>Tracks WHO published the post (author vs admin)</li>
+          <li>Status badge shows: <span class="badge badge-success">Published</span> or <span class="badge badge-warning">Draft</span></li>
+          <li>Real-time status updates via Turbo Streams (no page reload!)</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+        <h3 class="font-semibold text-lg mb-2">🔍 Search & Filter</h3>
+        <p class="text-gray-700 mb-2">Powerful search and filtering capabilities.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Search posts by title or body content</li>
+          <li>Filter by author</li>
+          <li>Admin-only: Filter by status (Published/Drafts)</li>
+          <li>Auto-submit search with 300ms debounce</li>
+          <li>Results update instantly without page reload</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold text-lg mb-2">🔗 SEO-Friendly URLs</h3>
+        <p class="text-gray-700 mb-2">Clean, readable URLs for better SEO.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Posts use slugs: <code class="bg-gray-200 px-1 rounded">/posts/my-awesome-post</code></li>
+          <li>Unique per user (multiple users can have same title)</li>
+          <li>Fallback to ID if slug unavailable</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments Features -->
+  <div class="card">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>💬</span> Comments System
+    </h2>
+    <div class="space-y-4">
+      <div class="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+        <h3 class="font-semibold text-lg mb-2">💭 Add Comments</h3>
+        <p class="text-gray-700 mb-2">Interactive commenting system with live updates.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Logged-in users can comment on any post</li>
+          <li>Guest comments supported (shows as "Guest")</li>
+          <li>Validation: 3-500 characters</li>
+          <li>Comments appear instantly (Turbo Streams)</li>
+          <li>Counter cache for performance (no N+1 queries)</li>
+          <li>Newest comments first</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+        <h3 class="font-semibold text-lg mb-2">🚫 Spam Protection</h3>
+        <p class="text-gray-700 mb-2">Intelligent spam detection blocks malicious comments.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Detects spam keywords: viagra, casino, bitcoin, click-here, etc.</li>
+          <li>Case-insensitive detection</li>
+          <li>Spam never hits the database (fast rejection)</li>
+          <li>Friendly error messages for users</li>
+          <li>Returns error code: <code class="bg-gray-200 px-1 rounded">:spam_blocked</code></li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold text-lg mb-2">🗑️ Delete Comments</h3>
+        <p class="text-gray-700 mb-2">Control over your comments.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Authors can delete their own comments</li>
+          <li>Admins can delete any comment</li>
+          <li>Animated removal with custom Turbo Stream action</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technical Features -->
+  <div class="card">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>⚙️</span> Technical Features
+    </h2>
+    <div class="space-y-4">
+      <div class="p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500">
+        <h3 class="font-semibold text-lg mb-2">⚡ Hotwire/Turbo</h3>
+        <p class="text-gray-700 mb-2">Modern SPA-like experience without writing JavaScript.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Turbo Drive: Fast navigation (no full page reloads)</li>
+          <li>Turbo Frames: Inline editing without leaving the page</li>
+          <li>Turbo Streams: Real-time updates via ActionCable</li>
+          <li>Custom stream action: <code class="bg-gray-200 px-1 rounded">animate_removal</code></li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-teal-50 rounded-lg border-l-4 border-teal-500">
+        <h3 class="font-semibold text-lg mb-2">🎯 Service Objects</h3>
+        <p class="text-gray-700 mb-2">Clean architecture with business logic in services.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li><strong>Posts::CreateService</strong> - Creates posts with optional instant publish</li>
+          <li><strong>Posts::PublishService</strong> - Publishes drafts, tracks publisher</li>
+          <li><strong>Comments::CreateService</strong> - Creates comments with spam detection</li>
+          <li>All services return <code class="bg-gray-200 px-1 rounded">Result</code> objects with error codes</li>
+          <li>Controllers stay thin (only handle HTTP concerns)</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-pink-50 rounded-lg border-l-4 border-pink-500">
+        <h3 class="font-semibold text-lg mb-2">🎨 Stimulus Controllers</h3>
+        <p class="text-gray-700 mb-2">JavaScript sprinkles for enhanced UX.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li><strong>autosubmit</strong> - Auto-submit search with debounce</li>
+          <li><strong>form-submit</strong> - Disable buttons while submitting</li>
+          <li><strong>animate-removal</strong> - Smooth animations</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold text-lg mb-2">🚀 Performance</h3>
+        <p class="text-gray-700 mb-2">Optimized for speed and efficiency.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Counter cache prevents N+1 queries on comments</li>
+          <li>Eager loading: <code class="bg-gray-200 px-1 rounded">includes(:user)</code></li>
+          <li>Database indexes on foreign keys and slugs</li>
+          <li>Spam checks before database writes</li>
+          <li>Turbo Streams for partial page updates</li>
+        </ul>
+      </div>
+
+      <div class="p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+        <h3 class="font-semibold text-lg mb-2">🔒 Security</h3>
+        <p class="text-gray-700 mb-2">Multiple layers of protection.</p>
+        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+          <li>Authorization checks on all sensitive actions</li>
+          <li>CSRF token protection on state-changing requests</li>
+          <li>PATCH/DELETE methods for mutations (not GET)</li>
+          <li>Owner-only or admin-only actions</li>
+          <li>SQL injection prevention via parameterized queries</li>
+          <li>Spam detection and blocking</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Getting Started -->
+  <div class="card bg-gradient-to-r from-blue-50 to-purple-50">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>🚀</span> Getting Started
+    </h2>
+    <div class="space-y-3">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl font-bold text-blue-600">1.</span>
+        <div>
+          <p class="font-semibold">Log In</p>
+          <p class="text-sm text-gray-600">Choose a user from the login dropdown (no password needed)</p>
+          <%= link_to "Login →", login_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="text-2xl font-bold text-blue-600">2.</span>
+        <div>
+          <p class="font-semibold">Create a Post</p>
+          <p class="text-sm text-gray-600">Write your first blog post (draft or publish immediately)</p>
+          <%= link_to "Go to Posts →", posts_path, class: "text-blue-600 hover:text-blue-800 text-sm font-medium" %>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="text-2xl font-bold text-blue-600">3.</span>
+        <div>
+          <p class="font-semibold">Explore Features</p>
+          <p class="text-sm text-gray-600">Try publishing, commenting, searching, and filtering</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technology Stack -->
+  <div class="card">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <span>🛠️</span> Technology Stack
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-3 bg-gray-50 rounded">
+        <h3 class="font-semibold mb-2">Backend</h3>
+        <ul class="text-sm text-gray-600 space-y-1">
+          <li>• Ruby 3.4.8</li>
+          <li>• Rails 8.1.1</li>
+          <li>• SQLite (dev) / PostgreSQL (prod)</li>
+        </ul>
+      </div>
+      <div class="p-3 bg-gray-50 rounded">
+        <h3 class="font-semibold mb-2">Frontend</h3>
+        <ul class="text-sm text-gray-600 space-y-1">
+          <li>• Hotwire (Turbo + Stimulus)</li>
+          <li>• Tailwind CSS v4.1.18</li>
+          <li>• esbuild + importmap</li>
+        </ul>
+      </div>
+      <div class="p-3 bg-gray-50 rounded">
+        <h3 class="font-semibold mb-2">Real-time</h3>
+        <ul class="text-sm text-gray-600 space-y-1">
+          <li>• ActionCable</li>
+          <li>• Turbo Streams</li>
+          <li>• Solid Cable</li>
+        </ul>
+      </div>
+      <div class="p-3 bg-gray-50 rounded">
+        <h3 class="font-semibold mb-2">Architecture</h3>
+        <ul class="text-sm text-gray-600 space-y-1">
+          <li>• Service Objects</li>
+          <li>• Result Objects</li>
+          <li>• Concerns</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-8">
+    <%= link_to "← Back to Posts", posts_path, class: "btn btn-secondary" %>
+  </div>
+</div>

@@ -4,18 +4,22 @@ class CommentsController < ApplicationController
   before_action :authorize_comment_delete, only: [:destroy]
   
   def create
-    # Find post by slug or ID
     @post = Post.find_by(slug: params[:post_id]) || Post.find(params[:post_id])
-    @comment = @post.comments.build(comment_params)
-    @comment.user = current_user
+    result = Comments::CreateService.call(post: @post, user: current_user, params: comment_params)
+    @comment = result.post
 
     respond_to do |format|
-      if @comment.save
-        format.html { redirect_to @post, notice: "Comment added successfully." }
-        format.turbo_stream { flash.now[:notice] = "Comment added successfully." }
+      if result.success?
+        format.html { redirect_to @post, notice: "💬 Comment added successfully!" }
+        format.turbo_stream { flash.now[:notice] = "💬 Comment added successfully!" }
       else
-        format.html { redirect_to @post, alert: "Failed to add comment: #{@comment.errors.full_messages.join(', ')}" }
-        format.turbo_stream { flash.now[:alert] = "Failed to add comment: #{@comment.errors.full_messages.join(', ')}" }
+        alert_message = friendly_error_message(result)
+        
+        format.html { redirect_to @post, alert: alert_message }
+        format.turbo_stream { 
+          flash.now[:alert] = alert_message
+          render :create, status: :unprocessable_entity 
+        }
       end
     end
   end
@@ -48,5 +52,22 @@ class CommentsController < ApplicationController
 
   def comment_params
     params.require(:comment).permit(:body)
+  end
+
+  def friendly_error_message(result)
+    case result.error_code
+    when :spam_blocked
+      "🚫 Your comment was blocked because it appears to contain spam. Please try again with different content."
+    when :invalid
+      if result.error.include?("can't be blank")
+        "📝 Please enter a comment before submitting."
+      elsif result.error.include?("too short")
+        "✏️ Your comment is too short. Please write at least 3 characters."
+      else
+        "❌ #{result.error}"
+      end
+    else
+      "⚠️ Failed to add comment. Please try again."
+    end
   end
 end

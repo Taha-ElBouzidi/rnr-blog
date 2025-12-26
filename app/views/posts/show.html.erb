@@ -1,12 +1,6 @@
 <div class="container">
   <div class="card">
-    <div class="mb-3">
-      <%= status_badge(@post.published_at) %>
-      <span class="post-meta ml-2">
-        <%= @post.published_at&.strftime("%B %d, %Y at %I:%M %p") || 
-            "Created #{time_ago_in_words(@post.created_at)} ago" %>
-      </span>
-    </div>
+    <%= render "posts/status_badge", post: @post %>
     
     <h1 class="text-3xl font-bold text-gray-900 mb-3"><%= @post.title %></h1>
     

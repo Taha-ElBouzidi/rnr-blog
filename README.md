@@ -841,6 +841,216 @@ Here's the app in action showing all the Turbo and Stimulus features:
 
 ---
 
+### Day 7 - Feature Documentation & Menu Page (Dec 26, 2025)
+
+#### Overview
+Created a comprehensive feature documentation page accessible at `/menu` that serves as a central hub for understanding all application capabilities. This page provides detailed explanations of every feature, technical implementation, and getting started guide.
+
+#### 1. **Menu Controller & Routes**
+*Location: `app/controllers/menu_controller.rb`*
+
+Generated dedicated controller for feature documentation:
+
+```bash
+bin/rails generate controller Menu index
+```
+
+**Route Configuration:**
+*Location: `config/routes.rb`*
+
+```ruby
+get "menu" => "menu#index", as: :menu
+```
+
+**Why This Approach:**
+- Clean URL: `/menu` instead of `/menu/index`
+- Named route helper: `menu_path` for easy linking
+- RESTful design pattern for documentation endpoint
+
+#### 2. **Comprehensive Documentation Page**
+*Location: `app/views/menu/index.html.erb`*
+
+Built a fully-featured documentation page covering:
+
+**Content Sections:**
+
+1. **User Management** 📋
+   - Test login system explanation
+   - User roles (Member vs Admin)
+   - Permission differences
+   - Quick login link
+
+2. **Posts Management** 📝
+   - CRUD operations with validation rules
+   - Publishing system with draft/publish workflow
+   - Publisher tracking feature
+   - Real-time status updates via Turbo Streams
+   - Search & filter capabilities
+   - SEO-friendly URL slugs
+
+3. **Comments System** 💬
+   - Inline comment creation
+   - Guest comment support
+   - Spam protection with keyword detection
+   - Delete permissions
+   - Counter cache performance
+
+4. **Technical Features** ⚙️
+   - **Hotwire/Turbo**: Turbo Drive, Frames, Streams explained
+   - **Service Objects**: Architecture pattern with all services listed
+   - **Stimulus Controllers**: autosubmit, form-submit, animate-removal
+   - **Performance**: Counter cache, eager loading, indexes
+   - **Security**: Authorization, CSRF, spam detection
+
+5. **Getting Started Guide** 🚀
+   - 3-step onboarding process
+   - Direct links to login and posts pages
+   - Clear action items for new users
+
+6. **Technology Stack** 🛠️
+   - Backend: Ruby 3.4.8, Rails 8.1.1, SQLite/PostgreSQL
+   - Frontend: Hotwire, Tailwind CSS, esbuild
+   - Real-time: ActionCable, Turbo Streams, Solid Cable
+   - Architecture: Service Objects, Result Objects, Concerns
+
+**Design Features:**
+- Emoji icons for visual clarity (📚 📋 📝 💬 ⚙️ 🚀 🛠️)
+- Color-coded sections with Tailwind utilities
+- Bordered accent cards (blue, green, purple, yellow, red, etc.)
+- Gradient background for Getting Started section
+- Responsive grid layout for tech stack
+- Consistent spacing with Tailwind's space utilities
+- Code snippets with gray background highlighting
+
+#### 3. **Navigation Integration**
+*Location: `app/views/layouts/application.html.erb`*
+
+Added "📚 Menu" link to global navigation:
+
+**For Logged-in Users:**
+```erb
+<div class="flex items-center gap-3">
+  <%= link_to "Home", posts_path, class: "btn btn-secondary" %>
+  <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
+  <span class="text-gray-900 text-sm font-semibold"><%= current_user.name %></span>
+  <%= button_to "Logout", logout_path, method: :delete, class: "btn btn-danger" %>
+</div>
+```
+
+**For Guests:**
+```erb
+<div class="flex items-center gap-3">
+  <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
+  <%= link_to "Login", login_path, class: "btn btn-primary" %>
+</div>
+```
+
+**Navigation Benefits:**
+- Accessible from every page via sticky header
+- Available to both authenticated and guest users
+- Consistent with existing navigation design
+- Clear visual indicator with book emoji
+
+#### 4. **Service Objects Documentation**
+
+The menu page documents all three service objects created in previous days:
+
+**Posts::CreateService**
+- Creates posts with optional `publish_now` parameter
+- Handles slug generation automatically
+- Returns Result object with success/error states
+
+**Posts::PublishService**
+- Publishes draft posts
+- Tracks publisher (author vs admin)
+- Broadcasts Turbo Stream updates for real-time UI
+
+**Comments::CreateService**
+- Creates comments with spam detection
+- Blocks malicious content before database writes
+- Returns error codes for specific failure reasons (`:spam_blocked`)
+
+#### 5. **Real-time Features Explained**
+
+**Turbo Streams Broadcasting:**
+```ruby
+# Example from Posts::PublishService
+turbo_stream.replace_to(
+  "post_#{post.id}_status",
+  target: "post_#{post.id}_status_badge",
+  partial: "posts/status_badge",
+  locals: { post: post }
+)
+```
+
+**Features Documented:**
+- Zero full-page reloads
+- Instant UI updates via ActionCable
+- Custom Turbo Stream action: `animate_removal`
+- Status badge subscriptions per post
+- Comment creation with prepend animation
+
+#### 6. **Security Documentation**
+
+**Multi-layer Protection Explained:**
+- Authorization checks on all sensitive actions
+- CSRF token protection
+- Proper HTTP methods (PATCH/DELETE, not GET)
+- Owner-only or admin-only permissions
+- SQL injection prevention
+- Spam keyword detection
+
+#### Technical Implementation
+
+**Files Created:**
+```
+app/controllers/menu_controller.rb       # Controller
+app/views/menu/index.html.erb           # Documentation view
+test/controllers/menu_controller_test.rb # Test file
+```
+
+**Files Modified:**
+```
+config/routes.rb                         # Added menu route
+app/views/layouts/application.html.erb   # Added navigation links
+```
+
+**Total Lines Added:** ~320 lines of comprehensive documentation
+
+#### Why This Matters
+
+**For Users:**
+- Single source of truth for all features
+- No need to dig through code to understand capabilities
+- Clear examples of what's possible
+- Getting started guidance
+
+**For Developers:**
+- Onboarding documentation for new team members
+- Feature reference during development
+- Architecture documentation (Service Objects, Turbo Streams)
+- Tech stack overview
+
+**For Product:**
+- Feature showcase for stakeholders
+- User capability reference
+- Training material
+
+---
+
+#### Usage
+
+Visit `/menu` or click "📚 Menu" in the navigation to access the feature documentation.
+
+The menu page is available to all users (both authenticated and guests) and provides:
+- Feature explanations with examples
+- Code snippets showing implementation
+- Links to key pages (login, posts)
+- Technology stack overview
+- Getting started guide
+
+---
+
 ## Contributing
 
 1. Fork the repository

@@ -1,11 +1,6 @@
 <%= turbo_frame_tag dom_id(post) do %>
   <div class="card">
-    <div class="mb-2">
-      <%= status_badge(post.published_at) %>
-      <span class="post-meta ml-2">
-        <%= time_ago_in_words(post.published_at || post.created_at) %> ago
-      </span>
-    </div>
+    <%= render "posts/status_badge", post: post %>
     
     <%= link_to post_path(post), class: "no-underline", data: { turbo_frame: "_top" } do %>
       <h3 class="post-title"><%= post.title %></h3>

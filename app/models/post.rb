@@ -1,5 +1,8 @@
 class Post < ApplicationRecord
+  broadcasts_refreshes
+  
   belongs_to :user
+  belongs_to :published_by, class_name: 'User', optional: true
   has_many :comments, -> { order(created_at: :desc) }, dependent: :destroy
 
   # Scopes

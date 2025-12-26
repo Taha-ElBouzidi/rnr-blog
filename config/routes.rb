@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "menu" => "menu#index", as: :menu
   get "login" => "sessions#new", as: :login
   post "login" => "sessions#create"
   delete "logout" => "sessions#destroy", as: :logout
@@ -16,6 +17,10 @@ Rails.application.routes.draw do
   # root "posts#index"
   root "posts#index"
   resources :posts do
+    member do
+      patch :publish
+      patch :unpublish
+    end
     resources :comments, only: [:create, :destroy]
   end
 
