@@ -841,213 +841,351 @@ Here's the app in action showing all the Turbo and Stimulus features:
 
 ---
 
-### Day 7 - Feature Documentation & Menu Page (Dec 26, 2025)
+### Day 7 — Services & Business Logic (Exercises) (Dec 26, 2025)
 
-#### Overview
-Created a comprehensive feature documentation page accessible at `/menu` that serves as a central hub for understanding all application capabilities. This page provides detailed explanations of every feature, technical implementation, and getting started guide.
+#### Exercise 7.1 — Service for Creating Posts
 
-#### 1. **Menu Controller & Routes**
+**Goal:** Move creation logic out of controllers.
+
+**Tasks:**
+1. Add `ApplicationService` with `.call` class method
+2. Implement `Posts::CreateService` that:
+   - Builds a post for a given user
+   - Sets `slug` and `published_at` when `publish_now: true`
+   - Returns a simple `Result` object (`success?`, `post`, `error`)
+3. Refactor `PostsController#create` to use the service
+
+**Implementation:**
+
+*Location: `app/services/application_service.rb`*
+```ruby
+class ApplicationService
+  def self.call(*args, **kwargs, &block)
+    new(*args, **kwargs, &block).call
+  end
+end
+```
+
+*Location: `app/services/result.rb`*
+```ruby
+class Result
+  attr_reader :post, :error, :error_code
+
+  def initialize(success:, post: nil, error: nil, error_code: nil)
+    @success = success
+    @post = post
+    @error = error
+    @error_code = error_code
+  end
+
+  def success?
+    @success
+  end
+end
+```
+
+*Location: `app/services/posts/create_service.rb`*
+```ruby
+class Posts::CreateService < ApplicationService
+  def initialize(user:, post_params:, publish_now: false)
+    @user = user
+    @post_params = post_params
+    @publish_now = publish_now
+  end
+
+  def call
+    post = @user.posts.build(@post_params)
+    
+    if @publish_now
+      post.published_at = Time.current
+      post.slug = post.generate_slug
+    end
+
+    if post.save
+      Result.new(success: true, post: post)
+    else
+      Result.new(success: false, post: post, error: post.errors.full_messages.join(", "))
+    end
+  end
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+def create
+  result = Posts::CreateService.call(
+    user: current_user,
+    post_params: post_params,
+    publish_now: params[:post][:publish_now] == "1"
+  )
+
+  if result.success?
+    redirect_to result.post, notice: "Post created successfully."
+  else
+    @post = result.post
+    render :new, status: :unprocessable_entity
+  end
+end
+```
+
+**Validation Checklist:**
+- ✅ Controller stays thin (params + redirect/render only)
+- ✅ Failure path re-renders form with errors from the service
+
+---
+
+#### Exercise 7.2 — Comment Creation Pipeline
+
+**Goal:** Handle comments consistently.
+
+**Tasks:**
+1. Create `Comments::CreateService` that:
+   - Checks for empty/spammy body (basic keyword list)
+   - Creates the comment and updates counter cache in a transaction
+   - Returns `Result` with error codes (`:invalid`, `:spam_blocked`)
+2. Call the service from `CommentsController#create` and show friendly errors
+
+**Implementation:**
+
+*Location: `app/services/comments/create_service.rb`*
+```ruby
+class Comments::CreateService < ApplicationService
+  SPAM_KEYWORDS = %w[
+    viagra cialis casino lottery bitcoin crypto
+    click-here buy-now limited-time act-now
+  ].freeze
+
+  def initialize(post:, user:, comment_params:)
+    @post = post
+    @user = user
+    @comment_params = comment_params
+  end
+
+  def call
+    body = @comment_params[:body].to_s.downcase
+
+    # Check for spam
+    if SPAM_KEYWORDS.any? { |keyword| body.include?(keyword) }
+      return Result.new(
+        success: false,
+        error: "Comment blocked: appears to contain spam",
+        error_code: :spam_blocked
+      )
+    end
+
+    comment = @post.comments.build(@comment_params)
+    comment.user = @user
+
+    ActiveRecord::Base.transaction do
+      if comment.save
+        Result.new(success: true, post: comment)
+      else
+        Result.new(
+          success: false,
+          post: comment,
+          error: comment.errors.full_messages.join(", "),
+          error_code: :invalid
+        )
+      end
+    end
+  end
+end
+```
+
+*Location: `app/controllers/comments_controller.rb`*
+```ruby
+def create
+  @post = Post.find(params[:post_id])
+  
+  result = Comments::CreateService.call(
+    post: @post,
+    user: current_user,
+    comment_params: comment_params
+  )
+
+  if result.success?
+    redirect_to @post, notice: "Comment added successfully."
+  else
+    if result.error_code == :spam_blocked
+      redirect_to @post, alert: "Comment blocked: appears to contain spam"
+    else
+      @comment = result.post
+      redirect_to @post, alert: result.error
+    end
+  end
+end
+```
+
+**Validation Checklist:**
+- ✅ Spammy comments never hit the database (4/4 spam keywords blocked)
+- ✅ Counter cache still updates when comments are added/removed
+
+---
+
+#### Exercise 7.3 — Publication Workflow
+
+**Goal:** Add explicit publish/unpublish flows.
+
+**Tasks:**
+1. Add routes/actions for `PostsController#publish` and `#unpublish`
+2. Implement `Posts::PublishService` that sets `published_at`, records publisher user, and returns `Result`
+3. Broadcast Turbo Stream to update the post status badge on index/show
+
+**Implementation:**
+
+*Location: `config/routes.rb`*
+```ruby
+resources :posts do
+  member do
+    patch :publish
+    patch :unpublish
+  end
+  resources :comments, only: [:create, :destroy]
+end
+```
+
+*Location: `db/migrate/20251226142912_add_published_by_to_posts.rb`*
+```ruby
+class AddPublishedByToPosts < ActiveRecord::Migration[8.1]
+  def change
+    add_reference :posts, :published_by, foreign_key: { to_table: :users }, null: true
+  end
+end
+```
+
+*Location: `app/models/post.rb`*
+```ruby
+belongs_to :published_by, class_name: 'User', optional: true
+broadcasts_refreshes
+```
+
+*Location: `app/services/posts/publish_service.rb`*
+```ruby
+class Posts::PublishService < ApplicationService
+  def initialize(post:, publisher:)
+    @post = post
+    @publisher = publisher
+  end
+
+  def call
+    @post.published_at = Time.current
+    @post.published_by = @publisher
+    @post.slug = @post.generate_slug if @post.slug.blank?
+
+    if @post.save
+      # Broadcast Turbo Stream update
+      Turbo::StreamsChannel.broadcast_replace_to(
+        "post_#{@post.id}_status",
+        target: "post_#{@post.id}_status_badge",
+        partial: "posts/status_badge",
+        locals: { post: @post }
+      )
+
+      Result.new(success: true, post: @post)
+    else
+      Result.new(success: false, post: @post, error: @post.errors.full_messages.join(", "))
+    end
+  end
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+def publish
+  authorize_post_edit
+  result = Posts::PublishService.call(post: @post, publisher: current_user)
+
+  respond_to do |format|
+    if result.success?
+      format.html { redirect_to @post, notice: "Post published!" }
+      format.turbo_stream { render :publish }
+    else
+      format.html { redirect_to @post, alert: result.error }
+    end
+  end
+end
+
+def unpublish
+  authorize_post_edit
+  @post.update(published_at: nil, published_by: nil)
+
+  respond_to do |format|
+    format.html { redirect_to @post, notice: "Post unpublished!" }
+    format.turbo_stream { render :unpublish }
+  end
+end
+```
+
+*Location: `app/views/posts/_status_badge.html.erb`*
+```erb
+<%= turbo_stream_from "post_#{post.id}_status" %>
+<div id="post_<%= post.id %>_status_badge">
+  <% if post.published_at.present? %>
+    <span class="badge badge-success">Published</span>
+  <% else %>
+    <span class="badge badge-warning">Draft</span>
+  <% end %>
+</div>
+```
+
+*Location: `app/views/posts/publish.turbo_stream.erb`*
+```erb
+<%= turbo_stream.replace "post_#{@post.id}_status_badge" do %>
+  <%= render "posts/status_badge", post: @post %>
+<% end %>
+```
+
+**Validation Checklist:**
+- ✅ Publishing/unpublishing works without page reloads (Turbo Streams verified via ActionCable logs)
+- ✅ Unauthorized users cannot hit the endpoints (authorization filters in place)
+- ✅ Publisher tracking works (tested: author publishes own post, admin publishes other's post)
+
+---
+
+#### Additional Feature: Menu Page
+
+Created a comprehensive feature documentation page at `/menu`:
+
 *Location: `app/controllers/menu_controller.rb`*
-
-Generated dedicated controller for feature documentation:
-
 ```bash
 bin/rails generate controller Menu index
 ```
 
-**Route Configuration:**
 *Location: `config/routes.rb`*
-
 ```ruby
 get "menu" => "menu#index", as: :menu
 ```
 
-**Why This Approach:**
-- Clean URL: `/menu` instead of `/menu/index`
-- Named route helper: `menu_path` for easy linking
-- RESTful design pattern for documentation endpoint
-
-#### 2. **Comprehensive Documentation Page**
 *Location: `app/views/menu/index.html.erb`*
-
-Built a fully-featured documentation page covering:
-
-**Content Sections:**
-
-1. **User Management** 📋
-   - Test login system explanation
-   - User roles (Member vs Admin)
-   - Permission differences
-   - Quick login link
-
-2. **Posts Management** 📝
-   - CRUD operations with validation rules
-   - Publishing system with draft/publish workflow
-   - Publisher tracking feature
-   - Real-time status updates via Turbo Streams
-   - Search & filter capabilities
-   - SEO-friendly URL slugs
-
-3. **Comments System** 💬
-   - Inline comment creation
-   - Guest comment support
-   - Spam protection with keyword detection
-   - Delete permissions
-   - Counter cache performance
-
-4. **Technical Features** ⚙️
-   - **Hotwire/Turbo**: Turbo Drive, Frames, Streams explained
-   - **Service Objects**: Architecture pattern with all services listed
-   - **Stimulus Controllers**: autosubmit, form-submit, animate-removal
-   - **Performance**: Counter cache, eager loading, indexes
-   - **Security**: Authorization, CSRF, spam detection
-
-5. **Getting Started Guide** 🚀
-   - 3-step onboarding process
-   - Direct links to login and posts pages
-   - Clear action items for new users
-
-6. **Technology Stack** 🛠️
-   - Backend: Ruby 3.4.8, Rails 8.1.1, SQLite/PostgreSQL
-   - Frontend: Hotwire, Tailwind CSS, esbuild
-   - Real-time: ActionCable, Turbo Streams, Solid Cable
-   - Architecture: Service Objects, Result Objects, Concerns
-
-**Design Features:**
-- Emoji icons for visual clarity (📚 📋 📝 💬 ⚙️ 🚀 🛠️)
-- Color-coded sections with Tailwind utilities
-- Bordered accent cards (blue, green, purple, yellow, red, etc.)
-- Gradient background for Getting Started section
-- Responsive grid layout for tech stack
-- Consistent spacing with Tailwind's space utilities
-- Code snippets with gray background highlighting
-
-#### 3. **Navigation Integration**
-*Location: `app/views/layouts/application.html.erb`*
-
-Added "📚 Menu" link to global navigation:
-
-**For Logged-in Users:**
-```erb
-<div class="flex items-center gap-3">
-  <%= link_to "Home", posts_path, class: "btn btn-secondary" %>
-  <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
-  <span class="text-gray-900 text-sm font-semibold"><%= current_user.name %></span>
-  <%= button_to "Logout", logout_path, method: :delete, class: "btn btn-danger" %>
-</div>
-```
-
-**For Guests:**
-```erb
-<div class="flex items-center gap-3">
-  <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
-  <%= link_to "Login", login_path, class: "btn btn-primary" %>
-</div>
-```
-
-**Navigation Benefits:**
-- Accessible from every page via sticky header
-- Available to both authenticated and guest users
-- Consistent with existing navigation design
-- Clear visual indicator with book emoji
-
-#### 4. **Service Objects Documentation**
-
-The menu page documents all three service objects created in previous days:
-
-**Posts::CreateService**
-- Creates posts with optional `publish_now` parameter
-- Handles slug generation automatically
-- Returns Result object with success/error states
-
-**Posts::PublishService**
-- Publishes draft posts
-- Tracks publisher (author vs admin)
-- Broadcasts Turbo Stream updates for real-time UI
-
-**Comments::CreateService**
-- Creates comments with spam detection
-- Blocks malicious content before database writes
-- Returns error codes for specific failure reasons (`:spam_blocked`)
-
-#### 5. **Real-time Features Explained**
-
-**Turbo Streams Broadcasting:**
-```ruby
-# Example from Posts::PublishService
-turbo_stream.replace_to(
-  "post_#{post.id}_status",
-  target: "post_#{post.id}_status_badge",
-  partial: "posts/status_badge",
-  locals: { post: post }
-)
-```
-
-**Features Documented:**
-- Zero full-page reloads
-- Instant UI updates via ActionCable
-- Custom Turbo Stream action: `animate_removal`
-- Status badge subscriptions per post
-- Comment creation with prepend animation
-
-#### 6. **Security Documentation**
-
-**Multi-layer Protection Explained:**
-- Authorization checks on all sensitive actions
-- CSRF token protection
-- Proper HTTP methods (PATCH/DELETE, not GET)
-- Owner-only or admin-only permissions
-- SQL injection prevention
-- Spam keyword detection
-
-#### Technical Implementation
+- Comprehensive documentation of all features
+- User Management, Posts, Comments, Technical Features sections
+- Getting Started guide with 3-step onboarding
+- Technology Stack overview
+- Links integrated in navigation for both logged-in and guest users
 
 **Files Created:**
 ```
-app/controllers/menu_controller.rb       # Controller
-app/views/menu/index.html.erb           # Documentation view
-test/controllers/menu_controller_test.rb # Test file
+app/services/application_service.rb
+app/services/result.rb
+app/services/posts/create_service.rb
+app/services/posts/publish_service.rb
+app/services/comments/create_service.rb
+app/controllers/menu_controller.rb
+app/views/menu/index.html.erb
+app/views/posts/_status_badge.html.erb
+app/views/posts/publish.turbo_stream.erb
+app/views/posts/unpublish.turbo_stream.erb
+db/migrate/20251226142912_add_published_by_to_posts.rb
 ```
 
 **Files Modified:**
 ```
-config/routes.rb                         # Added menu route
-app/views/layouts/application.html.erb   # Added navigation links
+app/controllers/posts_controller.rb       # Service integration, publish/unpublish actions
+app/controllers/comments_controller.rb    # Service integration, friendly error messages
+app/models/post.rb                        # published_by association, broadcasts_refreshes
+app/views/layouts/application.html.erb    # Menu navigation link
+config/routes.rb                          # Menu route, publish/unpublish routes
 ```
-
-**Total Lines Added:** ~320 lines of comprehensive documentation
-
-#### Why This Matters
-
-**For Users:**
-- Single source of truth for all features
-- No need to dig through code to understand capabilities
-- Clear examples of what's possible
-- Getting started guidance
-
-**For Developers:**
-- Onboarding documentation for new team members
-- Feature reference during development
-- Architecture documentation (Service Objects, Turbo Streams)
-- Tech stack overview
-
-**For Product:**
-- Feature showcase for stakeholders
-- User capability reference
-- Training material
-
----
-
-#### Usage
-
-Visit `/menu` or click "📚 Menu" in the navigation to access the feature documentation.
-
-The menu page is available to all users (both authenticated and guests) and provides:
-- Feature explanations with examples
-- Code snippets showing implementation
-- Links to key pages (login, posts)
-- Technology stack overview
-- Getting started guide
 
 ---
 
