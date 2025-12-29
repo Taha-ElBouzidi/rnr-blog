@@ -25,17 +25,18 @@
           <%= link_to "Blog", posts_path, class: "text-blue-600 no-underline" %>
         </h1>
         <div id="user_nav">
-          <% if current_user %>
+          <% if user_signed_in? %>
             <div class="flex items-center gap-3">
               <%= link_to "Home", posts_path, class: "btn btn-secondary" %>
               <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
               <span class="text-gray-900 text-sm font-semibold"><%= current_user.name %></span>
-              <%= button_to "Logout", logout_path, method: :delete, class: "btn btn-danger", data: { turbo: false } %>
+              <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "btn btn-danger", data: { turbo: false } %>
             </div>
           <% else %>
             <div class="flex items-center gap-3">
               <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
-              <%= link_to "Login", login_path, class: "btn btn-primary" %>
+              <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-primary" %>
+              <%= link_to "Login", new_user_session_path, class: "btn btn-secondary" %>
             </div>
           <% end %>
         </div>

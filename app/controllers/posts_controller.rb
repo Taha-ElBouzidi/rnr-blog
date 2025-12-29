@@ -1,10 +1,11 @@
 class PostsController < ApplicationController
-  before_action :require_login, only: [:new, :create]
+  before_action :store_user_location!, if: :storable_location?
+  before_action :authenticate_user!, only: [:new, :create]
   before_action :set_post, only: [:edit, :update, :destroy, :publish, :unpublish]
-  before_action :authorize_post_edit, only: [:edit, :update, :destroy, :publish, :unpublish]
   
   def index
-    @posts = Post.includes(:user).recent
+    authorize! Post, to: :index?
+    @posts = authorized_scope(Post.includes(:user).recent)
     
     # Only admins can filter by status
     if current_user&.role == "admin"
@@ -23,14 +24,24 @@ class PostsController < ApplicationController
       format.turbo_stream
     end
   end
+  
   def show
+    # Use authorized_scope to prevent data leakage
     # Eager load comments and their users to avoid N+1
-    @post = Post.includes(comments: :user).find_by(slug: params[:id]) || Post.includes(comments: :user).find(params[:id])
+    @post = authorized_scope(Post.includes(comments: :user)).find_by(slug: params[:id]) || 
+            authorized_scope(Post.includes(comments: :user)).find(params[:id])
+    authorize! @post
   end
+  
   def new
     @post = Post.new
+    authorize! @post
   end
+  
   def create
+    @post = Post.new
+    authorize! @post
+    
     publish_now = params[:post][:publish_now] == "1" || params[:commit] == "Publish"
     result = Posts::CreateService.call(
       user: current_user, 
@@ -49,9 +60,13 @@ class PostsController < ApplicationController
       end
     end
   end
+  
   def edit
+    authorize! @post
   end
+  
   def update
+    authorize! @post
     respond_to do |format|
       if @post.update(post_params)
         format.html { redirect_to posts_path, notice: "Post was successfully updated." }
@@ -62,7 +77,9 @@ class PostsController < ApplicationController
       end
     end
   end
+
   def destroy
+    authorize! @post
     @post.destroy
     respond_to do |format|
       format.html { redirect_to posts_path, notice: "Post was successfully deleted." }
@@ -71,6 +88,7 @@ class PostsController < ApplicationController
   end
 
   def publish
+    authorize! @post
     result = Posts::PublishService.call(post: @post, publisher: current_user)
 
     respond_to do |format|
@@ -86,6 +104,7 @@ class PostsController < ApplicationController
   end
 
   def unpublish
+    authorize! @post
     if @post.published?
       @post.update!(published_at: nil, published_by_id: nil)
       broadcast_status_update(@post)
@@ -110,17 +129,17 @@ class PostsController < ApplicationController
   end
 
   def set_post
+    # Use authorized_scope to prevent data leakage
     # Try to find by slug first, then fall back to ID
-    @post = Post.find_by(slug: params[:id]) || Post.find(params[:id])
-  end
-
-  def authorize_post_edit
-    unless can_edit_post?(@post)
-      redirect_to posts_path, alert: "You are not authorized to perform this action."
-    end
+    @post = authorized_scope(Post).find_by(slug: params[:id]) || 
+            authorized_scope(Post).find(params[:id])
   end
 
   def post_params
     params.require(:post).permit(:title, :body, :published_at)
+  end
+  
+  def storable_location?
+    request.get? && is_navigational_format? && !devise_controller? && !request.xhr?
   end
 end

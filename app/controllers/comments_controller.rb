@@ -1,10 +1,13 @@
 class CommentsController < ApplicationController
-  before_action :require_login, only: [:create]
+  before_action :authenticate_user!, only: [:create]
   before_action :set_comment, only: [:destroy]
-  before_action :authorize_comment_delete, only: [:destroy]
   
   def create
-    @post = Post.find_by(slug: params[:post_id]) || Post.find(params[:post_id])
+    @post = authorized_scope(Post).find_by(slug: params[:post_id]) || 
+            authorized_scope(Post).find(params[:post_id])
+    @comment = @post.comments.build
+    authorize! @comment
+    
     result = Comments::CreateService.call(post: @post, user: current_user, params: comment_params)
     @comment = result.post
 
@@ -25,6 +28,7 @@ class CommentsController < ApplicationController
   end
 
   def destroy
+    authorize! @comment
     @comment.destroy
     respond_to do |format|
       format.html { redirect_to @post, notice: "Comment deleted successfully." }
@@ -41,12 +45,6 @@ class CommentsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to posts_path, alert: "Comment not found." }
       format.turbo_stream { head :no_content }
-    end
-  end
-
-  def authorize_comment_delete
-    unless can_delete_comment?(@comment)
-      redirect_to @post, alert: "You are not authorized to delete this comment."
     end
   end
 

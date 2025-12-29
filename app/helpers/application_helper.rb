@@ -1,4 +1,11 @@
 module ApplicationHelper
+  # ActionPolicy helper - check if user can perform action on record
+  def can?(action, record)
+    allowed_to?(action, record)
+  rescue ActionPolicy::Unauthorized
+    false
+  end
+
   # Flash message CSS classes
   def flash_class(type)
     case type.to_s

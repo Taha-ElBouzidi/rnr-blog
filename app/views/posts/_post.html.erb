@@ -18,8 +18,10 @@
       
       <div class="flex gap-2">
         <%= link_to "View", post_path(post), class: "btn-sm btn-secondary", data: { turbo_frame: "_top" } %>
-        <% if can_edit_post?(post) %>
+        <% if allowed_to?(:update?, post) %>
           <%= link_to "Edit", edit_post_path(post), class: "btn-sm btn-secondary", data: { turbo_frame: "edit_post_#{post.id}" } %>
+        <% end %>
+        <% if allowed_to?(:destroy?, post) %>
           <%= button_to "Delete", post_path(post), method: :delete, class: "btn-sm btn-danger" %>
         <% end %>
       </div>

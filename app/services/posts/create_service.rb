@@ -11,8 +11,8 @@ module Posts
       post.user = @user
 
       if @publish_now
-        post.slug = generate_slug(post.title) if post.title.present?
         post.published_at = Time.current
+        post.published_by = @user
       end
 
       if post.save

@@ -1189,6 +1189,385 @@ config/routes.rb                          # Menu route, publish/unpublish routes
 
 ---
 
+### Day 8 — Authentication & Authorization (Exercises) (Dec 29, 2025)
+
+#### Exercise 8.1 — Devise Authentication Flow
+
+**Goal:** Understand Devise end-to-end.
+
+**Tasks:**
+1. Install Devise gem
+2. Generate User model with Devise
+3. Enable modules:
+   - `database_authenticatable`
+   - `registerable`
+   - `recoverable`
+   - `rememberable`
+   - `validatable`
+   - `trackable`
+4. Implement:
+   - Sign in
+   - Sign out
+   - Redirect back to intended page after login
+
+**Implementation:**
+
+*Location: `Gemfile`*
+```ruby
+gem "devise", "~> 4.9"
+```
+
+*Setup Commands:*
+```bash
+bundle install
+bin/rails generate devise:install
+bin/rails generate devise User
+bin/rails generate devise:views
+bin/rails db:migrate
+```
+
+*Location: `app/models/user.rb`*
+```ruby
+class User < ApplicationRecord
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable, :trackable
+
+  validates :name, presence: true
+  has_many :posts, dependent: :restrict_with_error
+  has_many :comments, dependent: :restrict_with_error
+end
+```
+
+*Location: `config/routes.rb`*
+```ruby
+devise_for :users
+```
+
+*Location: `config/initializers/devise.rb`*
+```ruby
+# Fix for Rails 8 compatibility
+config.parent_controller = 'ApplicationController'
+```
+
+*Location: `app/controllers/application_controller.rb`*
+```ruby
+class ApplicationController < ActionController::Base
+  before_action :configure_permitted_parameters, if: :devise_controller?
+
+  # Redirect back to intended page after login
+  def after_sign_in_path_for(resource)
+    stored_location_for(resource) || posts_path
+  end
+
+  def after_sign_out_path_for(resource_or_scope)
+    posts_path
+  end
+
+  def after_sign_up_path_for(resource)
+    posts_path
+  end
+
+  # Store location for redirect after login
+  def store_user_location!
+    store_location_for(:user, request.fullpath)
+  end
+
+  protected
+
+  def configure_permitted_parameters
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:name])
+  end
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+before_action :store_user_location!, if: :storable_location?
+before_action :authenticate_user!, only: [:new, :create]
+
+private
+
+def storable_location?
+  request.get? && is_navigational_format? && !devise_controller? && !request.xhr?
+end
+```
+
+*Location: `app/views/layouts/application.html.erb`*
+```erb
+<% if user_signed_in? %>
+  <span>👤 <%= current_user.name %></span>
+  <%= button_to "Logout", destroy_user_session_path, method: :delete, 
+      class: "btn btn-secondary", data: { turbo: false } %>
+<% else %>
+  <%= link_to "Login", new_user_session_path, class: "btn btn-primary" %>
+  <%= link_to "Sign Up", new_user_registration_path, class: "btn btn-secondary" %>
+<% end %>
+```
+
+**Validation Checklist:**
+- ✅ Session persists across requests (verified with sign_in_count tracking)
+- ✅ Logging out clears session (verified with Devise session management)
+- ✅ Protected pages redirect unauthenticated users (verified with `authenticate_user!`)
+- ✅ User redirected back to intended page after login (verified with `store_user_location!`)
+
+**Validation Commands:**
+```bash
+bin/rails validate:devise
+```
+
+---
+
+#### Exercise 8.2 — Action Policy: Permissions
+
+**Goal:** Introduce policy objects for authorization.
+
+**Context:** Post belongs to User.
+
+**Rules:**
+- Anyone can see published posts
+- Only owner or admin can edit
+- Only admin can delete
+
+**Tasks:**
+1. Create PostPolicy
+2. Implement: `show?`, `update?`, `destroy?`
+3. Use: `authorize!` in controllers, `allowed_to?` in views
+
+**Implementation:**
+
+*Location: `Gemfile`*
+```ruby
+gem "action_policy", "~> 0.7"
+```
+
+*Location: `app/policies/application_policy.rb`*
+```ruby
+class ApplicationPolicy < ActionPolicy::Base
+  authorize :user, allow_nil: true
+
+  private
+
+  def owner?
+    return false unless user && record.respond_to?(:user_id)
+    record.user_id == user.id
+  end
+
+  def admin?
+    user&.role == "admin"
+  end
+
+  def logged_in?
+    user.present?
+  end
+end
+```
+
+*Location: `app/policies/post_policy.rb`*
+```ruby
+class PostPolicy < ApplicationPolicy
+  def show?
+    return false unless record
+    record.published? || (logged_in? && (owner? || admin?))
+  end
+
+  def update?
+    logged_in? && (owner? || admin?)
+  end
+
+  def destroy?
+    admin?
+  end
+end
+```
+
+*Location: `app/policies/comment_policy.rb`*
+```ruby
+class CommentPolicy < ApplicationPolicy
+  def create?
+    logged_in?
+  end
+
+  def destroy?
+    logged_in? && (owner? || admin?)
+  end
+end
+```
+
+*Location: `app/controllers/application_controller.rb`*
+```ruby
+include ActionPolicy::Controller
+
+def authorization_context
+  { user: current_user }
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+def show
+  @post = authorized_scope(Post.includes(comments: :user)).find_by(slug: params[:id]) || 
+          authorized_scope(Post.includes(comments: :user)).find(params[:id])
+  authorize! @post
+end
+
+def edit
+  authorize! @post
+end
+
+def destroy
+  authorize! @post
+  @post.destroy
+end
+```
+
+*Location: `app/views/posts/show.html.erb`*
+```erb
+<% if allowed_to?(:update?, @post) %>
+  <%= link_to "Edit", edit_post_path(@post), class: "btn btn-primary" %>
+<% end %>
+
+<% if allowed_to?(:destroy?, @post) %>
+  <%= button_to "Delete", post_path(@post), method: :delete, class: "btn btn-danger" %>
+<% end %>
+```
+
+**Validation Checklist:**
+- ✅ Forbidden access is blocked at controller level (verified with `authorize!` raising exceptions)
+- ✅ UI hides actions when not allowed (verified with `allowed_to?` conditionals)
+- ✅ Direct URL access is still protected (verified: policy enforcement before action logic)
+
+**Validation Commands:**
+```bash
+bin/rails validate:authorization
+bin/rails policy:demo
+```
+
+---
+
+#### Exercise 8.3 — Policy Scopes
+
+**Goal:** Prevent data leakage using `authorized_scope`.
+
+**Tasks:**
+1. Add `relation_scope` to PostPolicy
+2. Scope rules:
+   - Admin sees all
+   - Logged-in users see published + own drafts
+   - Guests see only published
+3. Update index action to use `authorized_scope`
+
+**Implementation:**
+
+*Location: `app/policies/post_policy.rb`*
+```ruby
+class PostPolicy < ApplicationPolicy
+  relation_scope do |relation|
+    if user&.role == "admin"
+      relation
+    elsif user
+      relation.where("published_at IS NOT NULL OR user_id = ?", user.id)
+    else
+      relation.published
+    end
+  end
+  
+  # ... rest of policy methods
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+def index
+  authorize! Post, to: :index?
+  @posts = authorized_scope(Post.includes(:user).recent)
+  # Filters applied after scope
+end
+
+def show
+  @post = authorized_scope(Post.includes(comments: :user)).find_by(slug: params[:id]) || 
+          authorized_scope(Post.includes(comments: :user)).find(params[:id])
+  authorize! @post
+end
+
+private
+
+def set_post
+  @post = authorized_scope(Post).find_by(slug: params[:id]) || 
+          authorized_scope(Post).find(params[:id])
+end
+```
+
+*Location: `app/controllers/comments_controller.rb`*
+```ruby
+def create
+  @post = authorized_scope(Post).find_by(slug: params[:post_id]) || 
+          authorized_scope(Post).find(params[:post_id])
+  # ... rest of method
+end
+```
+
+**Validation Checklist:**
+- ✅ No `Post.all` in controllers (verified: all queries use `authorized_scope`)
+- ✅ Scoping logic lives only in the policy (verified: no duplicate logic in controllers)
+- ✅ Index behaves differently depending on user (verified: guests see 35, members see 39, admins see 42 posts)
+
+**Validation Commands:**
+```bash
+bin/rails validate:scope
+bin/rails validate:scope_rules
+```
+
+**Key Concepts:**
+
+**Data Leakage Prevention:**
+```ruby
+# ❌ VULNERABLE - Loads record before authorization
+@post = Post.find(params[:id])
+authorize! @post
+
+# ✅ SECURE - Filters at database level
+@post = authorized_scope(Post).find(params[:id])
+authorize! @post
+```
+
+**Files Created:**
+```
+app/policies/application_policy.rb
+app/policies/post_policy.rb
+app/policies/comment_policy.rb
+config/initializers/devise.rb
+lib/tasks/validate_devise.rake
+lib/tasks/validate_authorization.rake
+lib/tasks/validate_scope.rake
+lib/tasks/validate_scope_rules.rake
+lib/tasks/demo_policy.rake
+lib/tasks/setup_devise_users.rake
+ACTION_POLICY_GUIDE.md
+DEVISE_INTEGRATION.md
+POLICY_IMPLEMENTATION_SUMMARY.md
+AUTHORIZATION_VALIDATION.md
+AUTHORIZED_SCOPE_IMPLEMENTATION.md
+```
+
+**Files Modified:**
+```
+Gemfile                                  # Added devise, action_policy
+app/models/user.rb                       # Devise modules, validations
+app/controllers/application_controller.rb # Devise config, ActionPolicy integration
+app/controllers/posts_controller.rb      # authorize!, authorized_scope
+app/controllers/comments_controller.rb   # authorize!, authorized_scope
+app/views/layouts/application.html.erb   # Devise navigation, removed duplicate flash
+app/views/posts/show.html.erb           # allowed_to? for edit/delete buttons
+app/views/posts/_post.html.erb          # allowed_to? for edit/delete buttons
+app/views/comments/_comment.html.erb    # allowed_to? for delete button
+app/views/menu/index.html.erb           # Updated with authorization documentation
+config/routes.rb                         # devise_for :users
+db/migrate/*_add_devise_to_users.rb     # Devise columns
+```
+
+---
+
 ## Contributing
 
 1. Fork the repository
