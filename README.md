@@ -1311,11 +1311,6 @@ end
 - ✅ Protected pages redirect unauthenticated users (verified with `authenticate_user!`)
 - ✅ User redirected back to intended page after login (verified with `store_user_location!`)
 
-**Validation Commands:**
-```bash
-bin/rails validate:devise
-```
-
 ---
 
 #### Exercise 8.2 — Action Policy: Permissions
@@ -1437,12 +1432,6 @@ end
 - ✅ UI hides actions when not allowed (verified with `allowed_to?` conditionals)
 - ✅ Direct URL access is still protected (verified: policy enforcement before action logic)
 
-**Validation Commands:**
-```bash
-bin/rails validate:authorization
-bin/rails policy:demo
-```
-
 ---
 
 #### Exercise 8.3 — Policy Scopes
@@ -1512,12 +1501,6 @@ end
 - ✅ Scoping logic lives only in the policy (verified: no duplicate logic in controllers)
 - ✅ Index behaves differently depending on user (verified: guests see 35, members see 39, admins see 42 posts)
 
-**Validation Commands:**
-```bash
-bin/rails validate:scope
-bin/rails validate:scope_rules
-```
-
 **Key Concepts:**
 
 **Data Leakage Prevention:**
@@ -1537,17 +1520,6 @@ app/policies/application_policy.rb
 app/policies/post_policy.rb
 app/policies/comment_policy.rb
 config/initializers/devise.rb
-lib/tasks/validate_devise.rake
-lib/tasks/validate_authorization.rake
-lib/tasks/validate_scope.rake
-lib/tasks/validate_scope_rules.rake
-lib/tasks/demo_policy.rake
-lib/tasks/setup_devise_users.rake
-ACTION_POLICY_GUIDE.md
-DEVISE_INTEGRATION.md
-POLICY_IMPLEMENTATION_SUMMARY.md
-AUTHORIZATION_VALIDATION.md
-AUTHORIZED_SCOPE_IMPLEMENTATION.md
 ```
 
 **Files Modified:**
