@@ -1,0 +1,63 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="bg-white shadow-sm rounded-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">Edit Account</h1>
+
+    <%= form_with(model: @user, url: account_path, method: :patch, local: true, class: "space-y-6") do |form| %>
+      <% if @user.errors.any? %>
+        <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+          <h2 class="font-semibold mb-2"><%= pluralize(@user.errors.count, "error") %> prohibited this account from being saved:</h2>
+          <ul class="list-disc list-inside">
+            <% @user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Avatar Upload -->
+      <div class="space-y-2">
+        <%= form.label :avatar, "Profile Picture", class: "block text-sm font-medium text-gray-700" %>
+        
+        <% if @user.avatar.attached? %>
+          <div class="mb-4">
+            <%= image_tag @user.avatar.variant(resize_to_limit: [200, 200]), class: "rounded-full w-32 h-32 object-cover border-4 border-gray-200" %>
+          </div>
+        <% end %>
+        
+        <%= form.file_field :avatar, 
+          accept: "image/png,image/jpeg,image/jpg,image/gif",
+          class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" %>
+        <p class="text-xs text-gray-500 mt-1">JPEG, PNG, or GIF. Max 5MB.</p>
+      </div>
+
+      <!-- Name Field -->
+      <div class="space-y-2">
+        <%= form.label :name, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :name, 
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border",
+          placeholder: "Your full name" %>
+      </div>
+
+      <!-- Email Field -->
+      <div class="space-y-2">
+        <%= form.label :email, class: "block text-sm font-medium text-gray-700" %>
+        <%= form.email_field :email, 
+          class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border",
+          placeholder: "your.email@example.com" %>
+        <p class="text-xs text-gray-500">Changing your email will require confirmation.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-4 pt-4">
+        <%= form.submit "Save Changes", class: "inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-6 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer" %>
+        <%= link_to "Cancel", :back, class: "inline-flex justify-center rounded-md border border-gray-300 bg-white py-2 px-6 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      </div>
+    <% end %>
+
+    <!-- Change Password Section -->
+    <div class="mt-8 pt-8 border-t border-gray-200">
+      <h2 class="text-xl font-semibold mb-4">Change Password</h2>
+      <%= link_to "Update Password", edit_user_registration_path, class: "inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" %>
+    </div>
+  </div>
+</div>

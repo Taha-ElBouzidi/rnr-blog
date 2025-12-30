@@ -3,13 +3,15 @@ class CommentsController < ApplicationController
   before_action :set_comment, only: [:destroy]
   
   def create
-    @post = authorized_scope(Post).find_by(slug: params[:post_id]) || 
-            authorized_scope(Post).find(params[:post_id])
+    # Find post by slug first, fallback to ID
+    @post = Post.find_by(slug: params[:post_id]) || Post.find(params[:post_id])
+    authorize! @post, to: :show?  # Ensure user can access this post
+    
     @comment = @post.comments.build
-    authorize! @comment
+    authorize! @comment, to: :create?
     
     result = Comments::CreateService.call(post: @post, user: current_user, params: comment_params)
-    @comment = result.post
+    @comment = result.comment
 
     respond_to do |format|
       if result.success?
@@ -28,7 +30,7 @@ class CommentsController < ApplicationController
   end
 
   def destroy
-    authorize! @comment
+    authorize! @comment, to: :destroy?
     @comment.destroy
     respond_to do |format|
       format.html { redirect_to @post, notice: "Comment deleted successfully." }

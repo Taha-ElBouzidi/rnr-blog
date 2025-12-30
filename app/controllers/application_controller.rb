@@ -11,6 +11,21 @@ class ApplicationController < ActionController::Base
   
   before_action :configure_permitted_parameters, if: :devise_controller?
   
+  # Handle authorization failures
+  rescue_from ActionPolicy::Unauthorized do |exception|
+    respond_to do |format|
+      format.html do
+        flash[:alert] = "You are not authorized to perform this action."
+        redirect_back fallback_location: posts_path
+      end
+      format.turbo_stream do
+        flash.now[:alert] = "You are not authorized to perform this action."
+        render turbo_stream: turbo_stream.update("flash_messages", partial: "shared/flash"), status: :forbidden
+      end
+      format.json { render json: { error: "Unauthorized" }, status: :forbidden }
+    end
+  end
+  
   # ActionPolicy: Set authorization context
   def authorization_context
     { user: current_user }
@@ -19,8 +34,8 @@ class ApplicationController < ActionController::Base
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
-    devise_parameter_sanitizer.permit(:account_update, keys: [:name])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :avatar])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:name, :avatar])
   end
 
   # Redirect to posts page after sign in
@@ -35,7 +50,7 @@ class ApplicationController < ActionController::Base
 
   # Redirect to posts page after sign out
   def after_sign_out_path_for(resource_or_scope)
-    posts_path
+    root_path
   end
   
   # Store location before redirecting to login

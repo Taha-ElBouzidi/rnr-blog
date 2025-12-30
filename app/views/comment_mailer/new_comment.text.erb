@@ -1,0 +1,15 @@
+New Comment on "<%= @post.title %>"
+
+Hi <%= @recipient.name %>,
+
+<%= @commenter.name %> commented:
+
+<%= @comment.body %>
+
+---
+
+View the full conversation:
+<%= post_url(@post) %>
+
+---
+You're receiving this because you're <%= @recipient.id == @post.user_id ? "the author of" : "following" %> this post.

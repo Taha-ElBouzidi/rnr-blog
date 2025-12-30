@@ -1,9 +1,10 @@
 class Result
-  attr_reader :post, :error, :error_code
+  attr_reader :post, :comment, :error, :error_code
 
-  def initialize(success:, post: nil, error: nil, error_code: nil)
+  def initialize(success:, post: nil, comment: nil, error: nil, error_code: nil)
     @success = success
     @post = post
+    @comment = comment
     @error = error
     @error_code = error_code
   end

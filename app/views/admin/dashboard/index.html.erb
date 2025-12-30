@@ -1,0 +1,124 @@
+<% content_for :page_title, "Dashboard" %>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Total Users</p>
+        <p class="text-3xl font-bold text-gray-900"><%= @stats[:total_users] %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= @stats[:admin_users] %> admins</p>
+      </div>
+      <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+        👥
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Total Posts</p>
+        <p class="text-3xl font-bold text-gray-900"><%= @stats[:total_posts] %></p>
+        <p class="text-xs text-gray-500 mt-1"><%= @stats[:published_posts] %> published</p>
+      </div>
+      <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">
+        📝
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Draft Posts</p>
+        <p class="text-3xl font-bold text-gray-900"><%= @stats[:draft_posts] %></p>
+      </div>
+      <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl">
+        📋
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Total Comments</p>
+        <p class="text-3xl font-bold text-gray-900"><%= @stats[:total_comments] %></p>
+      </div>
+      <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">
+        💬
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Recent Users -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Recent Users</h3>
+      <%= link_to "View all", admin_users_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% @recent_users.each do |user| %>
+        <div class="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
+          <div>
+            <p class="font-medium text-gray-900"><%= user.name %></p>
+            <p class="text-sm text-gray-500"><%= user.email %></p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full <%= user.admin? ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' %>">
+            <%= user.role %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Recent Posts -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Recent Posts</h3>
+      <%= link_to "View all", admin_posts_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
+    </div>
+    <div class="divide-y divide-gray-200">
+      <% @recent_posts.each do |post| %>
+        <div class="px-6 py-3 hover:bg-gray-50">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <p class="font-medium text-gray-900"><%= post.title %></p>
+              <p class="text-sm text-gray-500">by <%= post.user.name %></p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full <%= post.published_at? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+              <%= post.published_at? ? 'Published' : 'Draft' %>
+            </span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Comments -->
+<div class="bg-white rounded-lg shadow mt-6">
+  <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+    <h3 class="text-lg font-semibold">Recent Comments</h3>
+    <%= link_to "View all", admin_comments_path, class: "text-sm text-blue-600 hover:text-blue-800" %>
+  </div>
+  <div class="divide-y divide-gray-200">
+    <% @recent_comments.each do |comment| %>
+      <div class="px-6 py-3 hover:bg-gray-50">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <p class="text-sm text-gray-900"><%= truncate(comment.body, length: 100) %></p>
+            <p class="text-xs text-gray-500 mt-1">
+              by <%= comment.user.name %> on <%= link_to comment.post.title, post_path(comment.post), class: "text-blue-600 hover:text-blue-800" %>
+            </p>
+          </div>
+          <span class="text-xs text-gray-400"><%= time_ago_in_words(comment.created_at) %> ago</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

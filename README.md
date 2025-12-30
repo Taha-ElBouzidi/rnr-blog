@@ -13,7 +13,7 @@ A full-featured Rails blog application with posts, comments, and user authentica
 ### Posts
 - Create, read, update, and delete posts
 - Title validation (5-120 characters)
-- Body validation (3-500 characters)
+- Body validation (10-500 characters)
 - Auto-generated SEO-friendly slugs from titles
 - Slug-based URLs (e.g., `/posts/my-awesome-post`)
 - Author attribution on all posts
@@ -1555,3 +1555,80 @@ This project is available as open source.
 ## Author
 
 Taha El Bouzidi
+
+---
+
+### Day 9 — Active Storage & Background Jobs (Exercises) (Dec 30, 2025)
+
+#### Exercise 9.1 — Post Images ✅
+
+**Goal:** Attach and display media.
+
+**Tasks:**
+1. Install Active Storage and migrate
+2. Add `has_one_attached :cover_image` to posts
+3. Update forms to upload a cover image and display a resized variant on index/show
+4. Validate content type (jpeg/png/webp) and size (<5MB)
+
+**Implementation:**
+
+*Install Active Storage:*
+```bash
+bin/rails active_storage:install
+bin/rails db:migrate
+```
+
+*Install libvips (image processing):*
+```bash
+sudo apt-get update
+sudo apt-get install -y libvips libvips-dev libvips-tools
+```
+
+**Validation Checklist:**
+- ✅ Uploading works locally; broken uploads show validation errors
+  - JPEG/PNG/WebP accepted, GIF rejected with error message
+  - Files >5MB rejected with error message
+- ✅ Variants render without blocking the request (processed lazily)
+  - Thumbnails (400×300) on index page
+  - Full size (800×600) on show page
+  - Image processing happens asynchronously via libvips
+
+---
+
+#### Exercise 9.2 — Background Email on Comment ✅
+
+**Goal:** Notify authors without slowing requests.
+
+**Tasks:**
+1. Generate `CommentMailer#new_comment` to email the post author and previous commenters
+2. Enqueue delivery with `deliver_later` from `Comments::CreateService`
+3. Use `ActiveJob::Base.queue_adapter = :async` for development
+
+**Validation Checklist:**
+- ✅ Creating a comment enqueues exactly one job per recipient
+  - Post author receives notification
+  - Previous commenters receive notifications
+  - No duplicates sent
+  - Current commenter excluded from recipients
+- ✅ Email includes post title, commenter name, and body preview
+  - HTML version with styled layout
+  - Plain text fallback version
+  - "View full conversation" link to post
+  - Personalized greeting with recipient name
+
+---
+
+#### Additional Features Implemented:
+
+**Account Management Page:**
+- Upload/change avatar (JPEG, PNG, GIF, max 5MB)
+- Update name and email
+- Accessible via "⚙️ Account" in navigation
+
+**Admin Dashboard:**
+- 📊 Dashboard Overview - Stats cards, recent activity
+- 👥 User Management - View all users, change roles, delete users
+- 📝 Post Management - View/edit/delete any post
+- 💬 Comment Moderation - View all comments, delete spam
+- Access: `/admin` (admins only)
+

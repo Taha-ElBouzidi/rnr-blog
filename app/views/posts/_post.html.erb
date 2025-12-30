@@ -6,6 +6,15 @@
       <h3 class="post-title"><%= post.title %></h3>
     <% end %>
     
+    <% if post.cover_image.attached? %>
+      <%= link_to post_path(post), class: "block mb-3", data: { turbo_frame: "_top" } do %>
+        <%= image_tag post.cover_image.variant(resize_to_limit: [400, 300]), 
+                      class: "w-full rounded-md object-cover", 
+                      alt: post.title,
+                      style: "max-height: 200px;" %>
+      <% end %>
+    <% end %>
+    
     <p class="text-gray-600 text-sm leading-normal mb-3">
       <%= truncate(post.body, length: 150, separator: ' ') %>
     </p>
@@ -13,6 +22,9 @@
     <div class="flex items-center justify-between border-t border-gray-200 pt-3">
       <div class="flex items-center gap-3">
         <span class="text-sm text-gray-600"><%= post.user&.name || "Unknown" %></span>
+        <% if post.published_at %>
+          <span class="text-sm text-gray-500">• <%= time_ago_in_words(post.published_at) %> ago</span>
+        <% end %>
         <span class="text-sm text-gray-600"><%= comments_count_text(post.comments_count) %></span>
       </div>
       

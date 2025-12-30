@@ -7,17 +7,26 @@ class PostsController < ApplicationController
     authorize! Post, to: :index?
     @posts = authorized_scope(Post.includes(:user).recent)
     
-    # Only admins can filter by status
-    if current_user&.role == "admin"
-      @posts = @posts.published if params[:status] == 'published'
-      @posts = @posts.drafts if params[:status] == 'drafts'
+    # Filter by status (published/drafts)
+    if params[:status].present? && current_user
+      if params[:status] == 'published'
+        @posts = @posts.published
+      elsif params[:status] == 'drafts'
+        # Members see only their own drafts, admins see all drafts
+        if current_user.role == "admin"
+          @posts = @posts.drafts
+        else
+          @posts = @posts.drafts.where(user_id: current_user.id)
+        end
+      end
     end
     
     @posts = @posts.by_author(params[:author_id]) if params[:author_id].present?
     
     @posts = @posts.search(params[:q]) if params[:q].present?
 
-    @authors = User.all # Cache for select options
+    # Only load necessary columns for author filter
+    @authors = User.select(:id, :name, :email).order(:name)
 
     respond_to do |format|
       format.html
@@ -26,23 +35,23 @@ class PostsController < ApplicationController
   end
   
   def show
-    # Use authorized_scope to prevent data leakage
     # Eager load comments and their users to avoid N+1
-    @post = authorized_scope(Post.includes(comments: :user)).find_by(slug: params[:id]) || 
-            authorized_scope(Post.includes(comments: :user)).find(params[:id])
-    authorize! @post
+    # Find by slug first, fallback to ID
+    @post = Post.includes(comments: :user).find_by(slug: params[:id]) || 
+            Post.includes(comments: :user).find(params[:id])
+    authorize! @post, to: :show?
   end
   
   def new
     @post = Post.new
-    authorize! @post
+    authorize! @post, to: :create?
   end
   
   def create
     @post = Post.new
-    authorize! @post
+    authorize! @post, to: :create?
     
-    publish_now = params[:post][:publish_now] == "1" || params[:commit] == "Publish"
+    publish_now = params[:commit] == "Publish"
     result = Posts::CreateService.call(
       user: current_user, 
       params: post_params,
@@ -52,8 +61,9 @@ class PostsController < ApplicationController
 
     respond_to do |format|
       if result.success?
-        format.html { redirect_to posts_path, notice: "Post was successfully created." }
-        format.turbo_stream { flash.now[:notice] = "Post was successfully created." }
+        message = publish_now ? "Post was successfully published!" : "Post was saved as draft."
+        format.html { redirect_to posts_path, notice: message }
+        format.turbo_stream { flash.now[:notice] = message }
       else
         format.html { render :new, status: :unprocessable_entity }
         format.turbo_stream { render :new, status: :unprocessable_entity }
@@ -62,11 +72,11 @@ class PostsController < ApplicationController
   end
   
   def edit
-    authorize! @post
+    authorize! @post, to: :update?
   end
   
   def update
-    authorize! @post
+    authorize! @post, to: :update?
     respond_to do |format|
       if @post.update(post_params)
         format.html { redirect_to posts_path, notice: "Post was successfully updated." }
@@ -79,7 +89,7 @@ class PostsController < ApplicationController
   end
 
   def destroy
-    authorize! @post
+    authorize! @post, to: :destroy?
     @post.destroy
     respond_to do |format|
       format.html { redirect_to posts_path, notice: "Post was successfully deleted." }
@@ -88,13 +98,19 @@ class PostsController < ApplicationController
   end
 
   def publish
-    authorize! @post
+    authorize! @post, to: :publish?
     result = Posts::PublishService.call(post: @post, publisher: current_user)
 
     respond_to do |format|
       if result.success?
-        format.html { redirect_to posts_path, notice: "📢 Post was successfully published!" }
-        format.turbo_stream { flash.now[:notice] = "📢 Post was successfully published!" }
+        format.html { redirect_to posts_path(status: 'published'), notice: "📢 Post was successfully published!" }
+        format.turbo_stream do
+          flash.now[:notice] = "📢 Post was successfully published!"
+          render turbo_stream: [
+            turbo_stream.remove(ActionView::RecordIdentifier.dom_id(@post)),
+            turbo_stream.update("flash_messages", partial: "shared/flash")
+          ]
+        end
       else
         alert_message = result.error_code == :already_published ? result.error : "Failed to publish post"
         format.html { redirect_to posts_path, alert: alert_message }
@@ -104,7 +120,7 @@ class PostsController < ApplicationController
   end
 
   def unpublish
-    authorize! @post
+    authorize! @post, to: :unpublish?
     if @post.published?
       @post.update!(published_at: nil, published_by_id: nil)
       broadcast_status_update(@post)
@@ -129,14 +145,12 @@ class PostsController < ApplicationController
   end
 
   def set_post
-    # Use authorized_scope to prevent data leakage
-    # Try to find by slug first, then fall back to ID
-    @post = authorized_scope(Post).find_by(slug: params[:id]) || 
-            authorized_scope(Post).find(params[:id])
+    # Find by slug first, then fall back to ID
+    @post = Post.find_by(slug: params[:id]) || Post.find(params[:id])
   end
 
   def post_params
-    params.require(:post).permit(:title, :body, :published_at)
+    params.require(:post).permit(:title, :body, :published_at, :cover_image)
   end
   
   def storable_location?

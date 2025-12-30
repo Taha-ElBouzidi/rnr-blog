@@ -19,7 +19,7 @@ module Comments
       if comment.body.blank?
         return Result.new(
           success: false,
-          post: comment,
+          comment: comment,
           error: "Comment body can't be blank",
           error_code: :invalid
         )
@@ -28,7 +28,7 @@ module Comments
       if spam_detected?(comment.body)
         return Result.new(
           success: false,
-          post: comment,
+          comment: comment,
           error: "Comment appears to be spam and was blocked",
           error_code: :spam_blocked
         )
@@ -39,7 +39,7 @@ module Comments
         unless comment.save
           return Result.new(
             success: false,
-            post: comment,
+            comment: comment,
             error: comment.errors.full_messages.join(', '),
             error_code: :invalid
           )
@@ -49,10 +49,39 @@ module Comments
         @post.reload
       end
 
-      Result.new(success: true, post: comment)
+      # Send notifications asynchronously (won't slow down the request)
+      send_notifications(comment)
+
+      Result.new(success: true, comment: comment)
     end
 
     private
+
+    def send_notifications(comment)
+      recipients = []
+      
+      # Notify post author (if they have email and didn't write the comment)
+      if comment.post.user&.email && comment.user_id != comment.post.user_id
+        recipients << comment.post.user
+      end
+      
+      # Notify previous commenters (excluding current commenter and post author)
+      previous_commenters = comment.post.comments
+        .where.not(user_id: nil)
+        .where.not(id: comment.id)
+        .where.not(user_id: comment.user_id)
+        .where.not(user_id: comment.post.user_id)
+        .includes(:user)
+        .map(&:user)
+        .uniq
+      
+      recipients += previous_commenters
+      
+      # Send emails asynchronously to all recipients
+      recipients.uniq.each do |recipient|
+        CommentMailer.new_comment(comment: comment, recipient: recipient).deliver_later
+      end
+    end
 
     def spam_detected?(body)
       return false if body.blank?

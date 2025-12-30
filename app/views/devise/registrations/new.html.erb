@@ -14,6 +14,12 @@
         <%= f.label :email, "Email", class: "form-label" %>
         <%= f.email_field :email, autocomplete: "email", placeholder: "your@email.com", class: "form-input" %>
       </div>
+      
+      <div class="mb-4">
+        <%= f.label :avatar, "Profile Picture (optional)", class: "form-label" %>
+        <%= f.file_field :avatar, accept: "image/*", class: "form-input" %>
+        <small class="form-hint">JPEG, PNG, or GIF. Max 5MB</small>
+      </div>
 
       <div class="mb-4">
         <%= f.label :password, "Password", class: "form-label" %>

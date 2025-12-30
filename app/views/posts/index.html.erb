@@ -8,16 +8,26 @@
 
   <%= turbo_frame_tag "new_post_frame" %>
 
+  <!-- Tabs Navigation -->
+  <% if current_user %>
+    <div class="flex gap-1 mb-4 border-b border-gray-200">
+      <%= link_to "All Posts", posts_path(q: params[:q], author_id: params[:author_id]), 
+          data: { turbo_action: "advance" },
+          class: "px-4 py-2 font-medium text-sm transition-colors #{params[:status].blank? ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}" %>
+      <%= link_to "Published", posts_path(status: 'published', q: params[:q], author_id: params[:author_id]), 
+          data: { turbo_action: "advance" },
+          class: "px-4 py-2 font-medium text-sm transition-colors #{params[:status] == 'published' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}" %>
+      <%= link_to "My Drafts", posts_path(status: 'drafts', q: params[:q], author_id: params[:author_id]), 
+          data: { turbo_action: "advance" },
+          class: "px-4 py-2 font-medium text-sm transition-colors #{params[:status] == 'drafts' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}" %>
+    </div>
+  <% end %>
+
+  <!-- Search and Filters -->
   <div class="card">
-    <%= form_with url: posts_path, method: :get, data: { turbo_frame: "posts", turbo_action: "advance", controller: "autosubmit" }, class: "flex gap-2 flex-wrap" do |f| %>
+    <%= form_with url: posts_path, method: :get, data: { turbo_action: "advance", controller: "autosubmit" }, class: "flex gap-2 flex-wrap" do |f| %>
+      <%= f.hidden_field :status, value: params[:status] %>
       <%= f.text_field :q, value: params[:q], placeholder: "Search posts...", class: "form-input flex-1 min-w-[200px]", data: { action: "input->autosubmit#submit", autosubmit_target: "search" } %>
-      
-      <% if current_user&.role == "admin" %>
-        <%= f.select :status, 
-            options_for_select([['All', ''], ['Published', 'published'], ['Drafts', 'drafts']], params[:status]),
-            {},
-            class: "form-select", data: { action: "change->autosubmit#submit" } %>
-      <% end %>
       
       <%= f.select :author_id,
           options_for_select([['All Authors', '']] + @authors.map { |u| [u.name || u.email, u.id] }, params[:author_id]),

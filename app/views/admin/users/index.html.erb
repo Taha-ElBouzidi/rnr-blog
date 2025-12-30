@@ -1,0 +1,70 @@
+<% content_for :page_title, "User Management" %>
+
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+  <%= form_with url: admin_users_path, method: :get, class: "flex gap-4 items-end" do |f| %>
+    <div class="flex-1">
+      <%= f.text_field :search, value: params[:search], placeholder: "Search by name or email...", class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+    </div>
+    
+    <div>
+      <%= f.select :role, options_for_select([['All Roles', ''], ['Admin', 'admin'], ['Member', 'member']], params[:role]), {}, class: "px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" %>
+    </div>
+    
+    <%= f.submit "Filter", class: "btn btn-primary" %>
+    <%= link_to "Clear", admin_users_path, class: "btn btn-secondary" %>
+  <% end %>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <% @users.each do |user| %>
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4">
+            <div>
+              <p class="font-medium text-gray-900"><%= user.name %></p>
+              <p class="text-sm text-gray-500"><%= user.email %></p>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <% if user == current_user %>
+              <span class="px-2 py-1 text-xs rounded-full <%= user.admin? ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800' %>">
+                <%= user.role %> (you)
+              </span>
+            <% else %>
+              <%= form_with model: [:admin, user], method: :patch, class: "inline-block" do |f| %>
+                <%= f.select :role, User::VALID_ROLES.map { |r| [r.capitalize, r] }, {}, 
+                  class: "px-2 py-1 text-xs rounded-full border-0 #{user.admin? ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'} cursor-pointer",
+                  onchange: "this.form.requestSubmit()" %>
+              <% end %>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            <%= user.posts.count %> posts, <%= user.comments.count %> comments
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            <%= time_ago_in_words(user.created_at) %> ago
+          </td>
+          <td class="px-6 py-4 text-right text-sm">
+            <% unless user == current_user %>
+              <%= button_to "Delete", admin_user_path(user), method: :delete, 
+                class: "text-red-600 hover:text-red-900",
+                form: { data: { turbo_confirm: "Are you sure you want to delete #{user.name}?" } } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

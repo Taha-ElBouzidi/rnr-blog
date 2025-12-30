@@ -41,8 +41,8 @@ class PostPolicy < ApplicationPolicy
   end
 
   def destroy?
-    # Rule: Only admin can delete
-    admin?
+    # Rule: Owner or admin can delete
+    logged_in? && (owner? || admin?)
   end
 
   def publish?

@@ -45,7 +45,7 @@ class DeviseAuthenticationTest < ActionDispatch::IntegrationTest
     # Follow redirect
     follow_redirect!
     assert_response :success
-    assert_match /sign in/i, response.body.downcase
+    assert_match(/sign in/i, response.body.downcase)
   end
 
   test "✓ Protected pages redirect unauthenticated users" do

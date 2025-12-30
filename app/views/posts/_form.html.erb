@@ -15,21 +15,38 @@
     <%= form.text_field :title, placeholder: "Enter title...", class: "form-input" %>
     <small class="form-hint">5-120 characters</small>
   </div>
+  
+  <div class="mb-4">
+    <%= form.label :cover_image, "Cover Image (optional)", class: "form-label" %>
+    <%= form.file_field :cover_image, accept: "image/jpeg,image/png,image/webp", class: "form-input" %>
+    <small class="form-hint">JPEG, PNG, or WebP. Max 5MB</small>
+    <% if post.cover_image.attached? %>
+      <div class="mt-2">
+        <%= image_tag post.cover_image.variant(resize_to_limit: [400, 300]), class: "rounded-md border border-gray-300" %>
+        <p class="text-sm text-gray-600 mt-1">Current image (will be replaced if you upload a new one)</p>
+      </div>
+    <% end %>
+  </div>
 
   <div class="mb-4">
     <%= form.label :body, "Content", class: "form-label" %>
     <%= form.text_area :body, rows: 10, placeholder: "Write your post...", class: "form-textarea" %>
-    <small class="form-hint">3-500 characters</small>
-  </div>
-
-  <div class="mb-4">
-    <%= form.label :published_at, "Publish Date", class: "form-label" %>
-    <%= form.datetime_field :published_at, class: "form-input" %>
-    <small class="form-hint">Leave empty for draft</small>
+    <small class="form-hint">10-500 characters</small>
   </div>
 
   <div class="flex gap-2">
-    <%= form.submit post.new_record? ? "Create Post" : "Update Post", class: "btn btn-success", data: { form_submit_target: "submit" } %>
+    <% if post.new_record? %>
+      <%= form.submit "Save as Draft", name: "commit", value: "Save as Draft", class: "btn btn-secondary", data: { form_submit_target: "submit" } %>
+      <%= form.submit "Publish", name: "commit", value: "Publish", class: "btn btn-success", data: { form_submit_target: "submit" } %>
+    <% else %>
+      <%= form.submit "Update Post", class: "btn btn-success", data: { form_submit_target: "submit" } %>
+    <% end %>
     <%= link_to "Back", posts_path, class: "btn btn-secondary", data: { turbo_frame: "_top" } %>
+  </div>
+<% end %>
+
+<% if post.persisted? && !post.published? && allowed_to?(:publish?, post) %>
+  <div class="mt-3">
+    <%= button_to "Publish Now", publish_post_path(post), method: :patch, class: "btn btn-primary", form: { data: { turbo_frame: "_top" } } %>
   </div>
 <% end %>

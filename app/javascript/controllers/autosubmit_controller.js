@@ -17,16 +17,16 @@ export default class extends Controller {
   clear(event) {
     event.preventDefault()
     
-    // Clear the search input
-    if (this.hasSearchTarget) {
-      this.searchTarget.value = ""
-    }
+    // Navigate to posts path with current status only (clears search and author filters)
+    const form = this.element
+    const statusInput = form.querySelector('input[name="status"]')
+    const statusValue = statusInput ? statusInput.value : ''
     
-    // Clear all select dropdowns by resetting form
-    this.element.reset()
+    // Build URL with only status param if present
+    const url = statusValue ? `/posts?status=${statusValue}` : '/posts'
     
-    // Submit to show all posts
-    this.element.requestSubmit()
+    // Use Turbo to navigate
+    window.Turbo.visit(url)
   }
 
   disconnect() {

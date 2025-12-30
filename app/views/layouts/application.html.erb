@@ -29,6 +29,10 @@
             <div class="flex items-center gap-3">
               <%= link_to "Home", posts_path, class: "btn btn-secondary" %>
               <%= link_to "📚 Menu", menu_path, class: "btn btn-secondary" %>
+              <% if current_user.admin? %>
+                <%= link_to "⚡ Admin", admin_root_path, class: "btn btn-primary" %>
+              <% end %>
+              <%= link_to "⚙️ Account", edit_account_path, class: "btn btn-secondary" %>
               <span class="text-gray-900 text-sm font-semibold"><%= current_user.name %></span>
               <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "btn btn-danger", data: { turbo: false } %>
             </div>

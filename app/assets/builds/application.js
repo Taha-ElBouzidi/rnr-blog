@@ -8683,11 +8683,11 @@ var autosubmit_controller_default = class extends Controller {
   }
   clear(event) {
     event.preventDefault();
-    if (this.hasSearchTarget) {
-      this.searchTarget.value = "";
-    }
-    this.element.reset();
-    this.element.requestSubmit();
+    const form = this.element;
+    const statusInput = form.querySelector('input[name="status"]');
+    const statusValue = statusInput ? statusInput.value : "";
+    const url = statusValue ? `/posts?status=${statusValue}` : "/posts";
+    window.Turbo.visit(url);
   }
   disconnect() {
     clearTimeout(this.timeout);

@@ -8,9 +8,22 @@
       <%= avatar_initials(@post.user, size: 'md') %>
       <div>
         <div class="font-semibold text-sm"><%= @post.user&.name || "Unknown Author" %></div>
-        <div class="text-gray-600 text-xs"><%= @post.user&.email %></div>
+        <div class="text-gray-600 text-xs">
+          <%= @post.user&.email %>
+          <% if @post.published_at %>
+            • Published <%= time_ago_in_words(@post.published_at) %> ago
+          <% end %>
+        </div>
       </div>
     </div>
+    
+    <% if @post.cover_image.attached? %>
+      <div class="mb-4">
+        <%= image_tag @post.cover_image.variant(resize_to_limit: [800, 600]), 
+                      class: "w-full rounded-lg shadow-md", 
+                      alt: @post.title %>
+      </div>
+    <% end %>
 
     <div class="mb-4 leading-relaxed text-sm">
       <%= simple_format(@post.body) %>
