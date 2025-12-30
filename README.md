@@ -1537,27 +1537,7 @@ app/views/menu/index.html.erb           # Updated with authorization documentati
 config/routes.rb                         # devise_for :users
 db/migrate/*_add_devise_to_users.rb     # Devise columns
 ```
-
 ---
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is available as open source.
-
-## Author
-
-Taha El Bouzidi
-
----
-
 ### Day 9 — Active Storage & Background Jobs (Exercises) (Dec 30, 2025)
 
 #### Exercise 9.1 — Post Images ✅
@@ -1631,4 +1611,25 @@ sudo apt-get install -y libvips libvips-dev libvips-tools
 - 📝 Post Management - View/edit/delete any post
 - 💬 Comment Moderation - View all comments, delete spam
 - Access: `/admin` (admins only)
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is available as open source.
+
+## Author
+
+Taha El Bouzidi
+
+---
+
+
 
