@@ -40,7 +40,7 @@ module Comments
           return Result.new(
             success: false,
             comment: comment,
-            error: comment.errors.full_messages.join(', '),
+            error: comment.errors.full_messages.join(", "),
             error_code: :invalid
           )
         end
@@ -59,12 +59,12 @@ module Comments
 
     def send_notifications(comment)
       recipients = []
-      
+
       # Notify post author (if they have email and didn't write the comment)
       if comment.post.user&.email && comment.user_id != comment.post.user_id
         recipients << comment.post.user
       end
-      
+
       # Notify previous commenters (excluding current commenter and post author)
       previous_commenters = comment.post.comments
         .where.not(user_id: nil)
@@ -74,9 +74,9 @@ module Comments
         .includes(:user)
         .map(&:user)
         .uniq
-      
+
       recipients += previous_commenters
-      
+
       # Send emails asynchronously to all recipients
       recipients.uniq.each do |recipient|
         CommentMailer.new_comment(comment: comment, recipient: recipient).deliver_later
@@ -85,7 +85,7 @@ module Comments
 
     def spam_detected?(body)
       return false if body.blank?
-      
+
       normalized_body = body.downcase
       SPAM_KEYWORDS.any? { |keyword| normalized_body.include?(keyword) }
     end

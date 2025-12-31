@@ -76,9 +76,9 @@ class PostCoverImageTest < ActiveSupport::TestCase
     @post.save!
 
     # Creating a variant does not immediately process it
-    variant = @post.cover_image.variant(resize_to_limit: [400, 300])
+    variant = @post.cover_image.variant(resize_to_limit: [ 400, 300 ])
     assert_instance_of ActiveStorage::Variant, variant
-    
+
     # Variant is processed only when needed (e.g., when calling .processed or rendering)
     assert_respond_to variant, :processed
   end

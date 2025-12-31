@@ -3,7 +3,7 @@ module Admin
     before_action :authenticate_user!
     before_action :require_admin!
 
-    layout 'admin'
+    layout "admin"
 
     private
 

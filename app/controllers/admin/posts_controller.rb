@@ -2,16 +2,16 @@ module Admin
   class PostsController < BaseController
     def index
       @posts = Post.includes(:user).order(created_at: :desc)
-      
+
       case params[:filter]
-      when 'published'
+      when "published"
         @posts = @posts.where.not(published_at: nil)
-      when 'draft'
+      when "draft"
         @posts = @posts.where(published_at: nil)
-      when 'no_cover'
+      when "no_cover"
         @posts = @posts.left_joins(:cover_image_attachment).where(active_storage_attachments: { id: nil })
       end
-      
+
       if params[:search].present?
         @posts = @posts.where("title LIKE ? OR body LIKE ?", "%#{params[:search]}%", "%#{params[:search]}%")
       end

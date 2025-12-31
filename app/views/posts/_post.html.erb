@@ -2,18 +2,22 @@
   <div class="card">
     <%= render "posts/status_badge", post: post %>
     
-    <%= link_to post_path(post), class: "no-underline", data: { turbo_frame: "_top" } do %>
-      <h3 class="post-title"><%= post.title %></h3>
-    <% end %>
-    
-    <% if post.cover_image.attached? %>
-      <%= link_to post_path(post), class: "block mb-3", data: { turbo_frame: "_top" } do %>
-        <%= image_tag post.cover_image.variant(resize_to_limit: [400, 300]), 
-                      class: "w-full rounded-md object-cover", 
-                      alt: post.title,
-                      style: "max-height: 200px;" %>
+    <div class="flex items-start gap-3 mb-3">
+      <div class="flex-1">
+        <%= link_to post_path(post), class: "no-underline", data: { turbo_frame: "_top" } do %>
+          <h3 class="post-title"><%= post.title %></h3>
+        <% end %>
+      </div>
+      
+      <% if post.cover_image.attached? %>
+        <%= link_to post_path(post), data: { turbo_frame: "_top" } do %>
+          <%= image_tag post.cover_image.variant(resize_to_limit: [400, 300]), 
+                        class: "rounded-md object-cover", 
+                        alt: post.title,
+                        style: "width: 180px; height: 80px;" %>
+        <% end %>
       <% end %>
-    <% end %>
+    </div>
     
     <p class="text-gray-600 text-sm leading-normal mb-3">
       <%= truncate(post.body, length: 150, separator: ' ') %>

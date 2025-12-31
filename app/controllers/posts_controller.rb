@@ -1,17 +1,17 @@
 class PostsController < ApplicationController
   before_action :store_user_location!, if: :storable_location?
-  before_action :authenticate_user!, only: [:new, :create]
-  before_action :set_post, only: [:edit, :update, :destroy, :publish, :unpublish]
-  
+  before_action :authenticate_user!, only: [ :new, :create ]
+  before_action :set_post, only: [ :edit, :update, :destroy, :publish, :unpublish ]
+
   def index
     authorize! Post, to: :index?
     @posts = authorized_scope(Post.includes(:user).recent)
-    
+
     # Filter by status (published/drafts)
     if params[:status].present? && current_user
-      if params[:status] == 'published'
+      if params[:status] == "published"
         @posts = @posts.published
-      elsif params[:status] == 'drafts'
+      elsif params[:status] == "drafts"
         # Members see only their own drafts, admins see all drafts
         if current_user.role == "admin"
           @posts = @posts.drafts
@@ -20,9 +20,9 @@ class PostsController < ApplicationController
         end
       end
     end
-    
+
     @posts = @posts.by_author(params[:author_id]) if params[:author_id].present?
-    
+
     @posts = @posts.search(params[:q]) if params[:q].present?
 
     # Only load necessary columns for author filter
@@ -33,27 +33,27 @@ class PostsController < ApplicationController
       format.turbo_stream
     end
   end
-  
+
   def show
     # Eager load comments and their users to avoid N+1
     # Find by slug first, fallback to ID
-    @post = Post.includes(comments: :user).find_by(slug: params[:id]) || 
+    @post = Post.includes(comments: :user).find_by(slug: params[:id]) ||
             Post.includes(comments: :user).find(params[:id])
     authorize! @post, to: :show?
   end
-  
+
   def new
     @post = Post.new
     authorize! @post, to: :create?
   end
-  
+
   def create
     @post = Post.new
     authorize! @post, to: :create?
-    
+
     publish_now = params[:commit] == "Publish"
     result = Posts::CreateService.call(
-      user: current_user, 
+      user: current_user,
       params: post_params,
       publish_now: publish_now
     )
@@ -70,11 +70,11 @@ class PostsController < ApplicationController
       end
     end
   end
-  
+
   def edit
     authorize! @post, to: :update?
   end
-  
+
   def update
     authorize! @post, to: :update?
     respond_to do |format|
@@ -103,7 +103,7 @@ class PostsController < ApplicationController
 
     respond_to do |format|
       if result.success?
-        format.html { redirect_to posts_path(status: 'published'), notice: "📢 Post was successfully published!" }
+        format.html { redirect_to posts_path(status: "published"), notice: "📢 Post was successfully published!" }
         format.turbo_stream do
           flash.now[:notice] = "📢 Post was successfully published!"
           render turbo_stream: [
@@ -152,7 +152,7 @@ class PostsController < ApplicationController
   def post_params
     params.require(:post).permit(:title, :body, :published_at, :cover_image)
   end
-  
+
   def storable_location?
     request.get? && is_navigational_format? && !devise_controller? && !request.xhr?
   end

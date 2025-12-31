@@ -8,8 +8,8 @@ module Posts
     def call
       if @post.published?
         return Result.new(
-          success: false, 
-          post: @post, 
+          success: false,
+          post: @post,
           error: "Post is already published",
           error_code: :already_published
         )
@@ -23,9 +23,9 @@ module Posts
         Result.new(success: true, post: @post)
       else
         Result.new(
-          success: false, 
-          post: @post, 
-          error: @post.errors.full_messages.join(', ')
+          success: false,
+          post: @post,
+          error: @post.errors.full_messages.join(", ")
         )
       end
     end

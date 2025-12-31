@@ -4,7 +4,7 @@ class CommentMailer < ApplicationMailer
     @post = comment.post
     @recipient = recipient
     @commenter = comment.user || OpenStruct.new(name: "Guest")
-    
+
     mail(
       to: recipient.email,
       subject: "New comment on \"#{@post.title}\""

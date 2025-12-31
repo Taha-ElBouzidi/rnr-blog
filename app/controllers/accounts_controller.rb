@@ -7,7 +7,7 @@ class AccountsController < ApplicationController
 
   def update
     @user = current_user
-    
+
     if @user.update(account_params)
       redirect_to edit_account_path, notice: "✅ Account updated successfully!"
     else

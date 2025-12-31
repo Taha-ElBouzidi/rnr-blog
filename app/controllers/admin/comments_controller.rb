@@ -2,7 +2,7 @@ module Admin
   class CommentsController < BaseController
     def index
       @comments = Comment.includes(:user, :post).order(created_at: :desc)
-      
+
       if params[:search].present?
         @comments = @comments.where("body LIKE ?", "%#{params[:search]}%")
       end

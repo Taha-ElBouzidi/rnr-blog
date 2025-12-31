@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
   include ActionPolicy::Controller
-  
+
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
@@ -8,9 +8,9 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   # Devise provides current_user helper automatically
-  
+
   before_action :configure_permitted_parameters, if: :devise_controller?
-  
+
   # Handle authorization failures
   rescue_from ActionPolicy::Unauthorized do |exception|
     respond_to do |format|
@@ -25,7 +25,7 @@ class ApplicationController < ActionController::Base
       format.json { render json: { error: "Unauthorized" }, status: :forbidden }
     end
   end
-  
+
   # ActionPolicy: Set authorization context
   def authorization_context
     { user: current_user }
@@ -34,8 +34,8 @@ class ApplicationController < ActionController::Base
   protected
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:name, :avatar])
-    devise_parameter_sanitizer.permit(:account_update, keys: [:name, :avatar])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :name, :avatar ])
+    devise_parameter_sanitizer.permit(:account_update, keys: [ :name, :avatar ])
   end
 
   # Redirect to posts page after sign in
@@ -52,7 +52,7 @@ class ApplicationController < ActionController::Base
   def after_sign_out_path_for(resource_or_scope)
     root_path
   end
-  
+
   # Store location before redirecting to login
   def store_user_location!
     store_location_for(:user, request.fullpath) if request.get? && !devise_controller?

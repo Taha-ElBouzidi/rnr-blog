@@ -1,15 +1,15 @@
 class CommentsController < ApplicationController
-  before_action :authenticate_user!, only: [:create]
-  before_action :set_comment, only: [:destroy]
-  
+  before_action :authenticate_user!, only: [ :create ]
+  before_action :set_comment, only: [ :destroy ]
+
   def create
     # Find post by slug first, fallback to ID
     @post = Post.find_by(slug: params[:post_id]) || Post.find(params[:post_id])
     authorize! @post, to: :show?  # Ensure user can access this post
-    
+
     @comment = @post.comments.build
     authorize! @comment, to: :create?
-    
+
     result = Comments::CreateService.call(post: @post, user: current_user, params: comment_params)
     @comment = result.comment
 
@@ -19,11 +19,11 @@ class CommentsController < ApplicationController
         format.turbo_stream { flash.now[:notice] = "💬 Comment added successfully!" }
       else
         alert_message = friendly_error_message(result)
-        
+
         format.html { redirect_to @post, alert: alert_message }
-        format.turbo_stream { 
+        format.turbo_stream {
           flash.now[:alert] = alert_message
-          render :create, status: :unprocessable_entity 
+          render :create, status: :unprocessable_entity
         }
       end
     end
@@ -39,7 +39,7 @@ class CommentsController < ApplicationController
   end
 
   private
-  
+
   def set_comment
     @comment = Comment.find(params[:id])
     @post = @comment.post

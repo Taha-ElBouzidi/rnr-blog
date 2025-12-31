@@ -7,7 +7,7 @@ module Admin
         published_posts: Post.where.not(published_at: nil).count,
         draft_posts: Post.where(published_at: nil).count,
         total_comments: Comment.count,
-        admin_users: User.where(role: 'admin').count
+        admin_users: User.where(role: "admin").count
       }
 
       @recent_users = User.order(created_at: :desc).limit(5)

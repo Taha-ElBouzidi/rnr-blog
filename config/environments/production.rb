@@ -6,8 +6,8 @@ Rails.application.configure do
   # Explicitly set secret_key_base from environment variable
   # Allow SECRET_KEY_BASE_DUMMY during asset precompilation in Docker
   # Generate a new secret if none exists (for platforms without credentials support)
-  config.secret_key_base = ENV["SECRET_KEY_BASE"].presence || 
-                            ENV["SECRET_KEY_BASE_DUMMY"].presence || 
+  config.secret_key_base = ENV["SECRET_KEY_BASE"].presence ||
+                            ENV["SECRET_KEY_BASE_DUMMY"].presence ||
                             Rails.application.credentials.secret_key_base ||
                             SecureRandom.hex(64)
 
