@@ -134,7 +134,7 @@ end
 ```erb
 <% if @post.featured_image.attached? %>
   <div class="mb-4">
-    <%= image_tag @post.featured_image.variant(resize_to_limit: [800, 600]), 
+    <%= image_tag @post.featured_image.variant(resize_to_limit: [1920, 1080]), 
                   class: "w-full rounded-lg shadow-md", 
                   alt: @post.title %>
   </div>
@@ -200,7 +200,7 @@ user.avatar.variant(resize_to_limit: [100, 100])
 post.featured_image.variant(resize_to_limit: [400, 300])
 
 # Post full size
-post.featured_image.variant(resize_to_limit: [800, 600])
+post.featured_image.variant(resize_to_limit: [1920, 1080])
 ```
 
 Variants are cached and only generated once.

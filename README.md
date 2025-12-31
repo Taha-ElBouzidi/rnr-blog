@@ -1564,13 +1564,97 @@ sudo apt-get update
 sudo apt-get install -y libvips libvips-dev libvips-tools
 ```
 
+*Location: `config/application.rb`*
+```ruby
+# Active Storage variant processor
+config.active_storage.variant_processor = :vips
+```
+
+*Location: `app/models/post.rb`*
+```ruby
+class Post < ApplicationRecord
+  has_one_attached :cover_image
+  
+  validate :cover_image_format
+  
+  private
+  
+  def cover_image_format
+    return unless cover_image.attached?
+    
+    unless cover_image.content_type.in?(%w[image/jpeg image/jpg image/png image/webp])
+      errors.add(:cover_image, 'must be a JPEG, PNG, or WebP image')
+    end
+    
+    if cover_image.byte_size > 5.megabytes
+      errors.add(:cover_image, 'must be less than 5MB')
+    end
+  end
+end
+```
+
+*Location: `app/models/user.rb`*
+```ruby
+class User < ApplicationRecord
+  has_one_attached :avatar
+  
+  validate :avatar_format
+  
+  private
+  
+  def avatar_format
+    return unless avatar.attached?
+    
+    unless avatar.content_type.in?(%w[image/jpeg image/jpg image/png image/gif])
+      errors.add(:avatar, 'must be a JPEG, PNG, or GIF image')
+    end
+    
+    if avatar.byte_size > 5.megabytes
+      errors.add(:avatar, 'must be less than 5MB')
+    end
+  end
+end
+```
+
+*Location: `app/controllers/posts_controller.rb`*
+```ruby
+def post_params
+  params.require(:post).permit(:title, :body, :cover_image)
+end
+```
+
+*Location: `app/views/posts/_form.html.erb`*
+```erb
+<%= form.label :cover_image, "Cover Image" %>
+<%= form.file_field :cover_image, 
+    accept: "image/png,image/jpeg,image/jpg,image/webp",
+    class: "form-input" %>
+<p class="text-xs text-gray-500">JPEG, PNG, or WebP. Max 5MB.</p>
+```
+
+*Location: `app/views/posts/show.html.erb`*
+```erb
+<% if @post.cover_image.attached? %>
+  <%= image_tag @post.cover_image.variant(resize_to_limit: [1920, 1080]), 
+      class: "w-full rounded-lg mb-4" %>
+<% end %>
+```
+
+*Location: `app/views/posts/_post.html.erb`*
+```erb
+<% if post.cover_image.attached? %>
+  <%= image_tag post.cover_image.variant(resize_to_limit: [400, 300]), 
+      class: "w-full rounded-lg mb-3 object-cover h-48" %>
+<% end %>
+```
+
 **Validation Checklist:**
 - ✅ Uploading works locally; broken uploads show validation errors
   - JPEG/PNG/WebP accepted, GIF rejected with error message
   - Files >5MB rejected with error message
 - ✅ Variants render without blocking the request (processed lazily)
   - Thumbnails (400×300) on index page
-  - Full size (800×600) on show page
+  - Full size (1920x1080) on show page
   - Image processing happens asynchronously via libvips
 
 ---
@@ -1583,6 +1667,135 @@ sudo apt-get install -y libvips libvips-dev libvips-tools
 1. Generate `CommentMailer#new_comment` to email the post author and previous commenters
 2. Enqueue delivery with `deliver_later` from `Comments::CreateService`
 3. Use `ActiveJob::Base.queue_adapter = :async` for development
+
+**Implementation:**
+
+*Generate Mailer:*
+```bash
+bin/rails generate mailer CommentMailer new_comment
+```
+
+*Location: `app/mailers/comment_mailer.rb`*
+```ruby
+class CommentMailer < ApplicationMailer
+  def new_comment(comment:, recipient:)
+    @comment = comment
+    @post = comment.post
+    @recipient = recipient
+    @commenter = comment.user
+
+    mail(
+      to: recipient.email,
+      subject: "New comment on #{@post.title}"
+    )
+  end
+end
+```
+
+*Location: `app/views/comment_mailer/new_comment.html.erb`*
+```erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background: #4F46E5; color: white; padding: 20px; }
+      .comment { background: white; padding: 15px; border-left: 4px solid #4F46E5; }
+      .btn { background: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💬 New Comment</h1>
+      </div>
+      <p>Hi <%= @recipient.name %>,</p>
+      <p><strong><%= @commenter.name %></strong> commented on "<%= @post.title %>":</p>
+      <div class="comment">
+        <%= simple_format(@comment.body) %>
+      </div>
+      <%= link_to "View full conversation", post_url(@post), class: "btn" %>
+    </div>
+  </body>
+</html>
+```
+
+*Location: `app/views/comment_mailer/new_comment.text.erb`*
+```erb
+Hi <%= @recipient.name %>,
+
+<%= @commenter.name %> commented on "<%= @post.title %>":
+
+<%= @comment.body %>
+
+---
+View the full conversation: <%= post_url(@post) %>
+```
+
+*Location: `app/services/comments/create_service.rb`*
+```ruby
+class Comments::CreateService < ApplicationService
+  # ... existing code ...
+
+  def call
+    # ... existing validation and creation code ...
+    
+    if comment.save
+      # Send notifications asynchronously
+      send_notifications(comment)
+      Result.new(success: true, comment: comment)
+    end
+  end
+
+  private
+
+  def send_notifications(comment)
+    recipients = []
+    
+    # Notify post author (if they didn't write the comment)
+    if comment.post.user&.email && comment.user_id != comment.post.user_id
+      recipients << comment.post.user
+    end
+    
+    # Notify previous commenters (excluding current commenter and post author)
+    previous_commenters = comment.post.comments
+      .where.not(user_id: nil)
+      .where.not(id: comment.id)
+      .where.not(user_id: comment.user_id)
+      .where.not(user_id: comment.post.user_id)
+      .includes(:user)
+      .map(&:user)
+      .uniq
+    
+    recipients += previous_commenters
+    
+    # Send emails asynchronously to all recipients
+    recipients.uniq.each do |recipient|
+      CommentMailer.new_comment(comment: comment, recipient: recipient).deliver_later
+    end
+  end
+end
+```
+
+*Location: `config/environments/development.rb`*
+```ruby
+# Async job adapter for background jobs
+config.active_job.queue_adapter = :async
+
+# Email configuration for development (mailcatcher)
+config.action_mailer.delivery_method = :smtp
+config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 }
+config.action_mailer.raise_delivery_errors = true
+config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+```
+
+*Setup Mailcatcher (for testing):*
+```bash
+gem install mailcatcher
+mailcatcher
+# Visit http://localhost:1080 to see emails
+```
 
 **Validation Checklist:**
 - ✅ Creating a comment enqueues exactly one job per recipient

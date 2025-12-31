@@ -38,7 +38,7 @@
 ### Featured Image with Variant
 ```erb
 <% if post.featured_image.attached? %>
-  <%= image_tag post.featured_image.variant(resize_to_limit: [800, 600]) %>
+  <%= image_tag post.featured_image.variant(resize_to_limit: [1920, 1080]) %>
 <% end %>
 ```
 
@@ -52,7 +52,7 @@ image.variant(resize_to_limit: [100, 100])
 image.variant(resize_to_limit: [400, 300])
 
 # Large
-image.variant(resize_to_limit: [800, 600])
+image.variant(resize_to_limit: [1920, 1080])
 
 # Specific dimensions (crop)
 image.variant(resize_to_fill: [300, 300])
