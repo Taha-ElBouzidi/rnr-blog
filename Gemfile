@@ -8,7 +8,7 @@ gem "propshaft"
 gem "puma", ">= 5.0"
 
 # Database
-gem "pg", "~> 1.1" # PostgreSQL for production
+gem "pg", "~> 1.6" # PostgreSQL for production
 gem "sqlite3", ">= 2.1", groups: [ :development, :test ] # SQLite for dev/test only
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
 gem "importmap-rails"
